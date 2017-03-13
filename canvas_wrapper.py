@@ -31,7 +31,7 @@ error_file.write("Bampath before looking in text: %s" % bam_path)
 
 if ".txt" in str(bam_file):
     bam_temp = bam_file.split("/")
-    bam_file = str("/".join(bam_temp[1:]))
+    bam_file = "/" + str("/".join(bam_temp[1:]))
     bam_text_file = open(bam_file, "r")
     bam_file = bam_text_file.readline()
     bam_text_file.close()
