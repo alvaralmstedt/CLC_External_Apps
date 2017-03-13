@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/CLC_External_Apps.iml" filepath="$PROJECT_DIR$/.idea/CLC_External_Apps.iml" />
+      <module fileurl="file://$USER_HOME$/Dropbox/repos/py_scripts/.idea/py_scripts.iml" filepath="$USER_HOME$/Dropbox/repos/py_scripts/.idea/py_scripts.iml" />
     </modules>
   </component>
 </project>
