@@ -13,15 +13,31 @@ vcf_out = argv[3]
 cnv_text = argv[4]
 cnv_copynumber = argv[5]
 
+error_file = open("/tmp/canvaserror.log", 'w+')
+
+
 if "Somatic" in mode:
     mode = "Somatic-WGS"
 else:
     mode = "Germline-WGS"
 
+
+
 array = bam_file.split("/")
 filename = array[-1]
-
 bam_path = "/tmp/canvas/%s" % filename
+
+error_file.write("Bampath before looking in text: %s" % bam_path)
+
+if ".txt" in str(bam_file):
+    bam_text_file = open(bam_file, "r")
+    bam_file = bam_text_file.readline()
+    bam_text_file.close()
+    array = bam_file.split("/")
+    filename = array[-1]
+    bam_path = "/tmp/canvas/%s" % filename
+
+error_file.write("Bampath after looking in text: %s" % bam_path)
 
 call("mkdir /tmp/canvas", shell=True)
 call("mkdir /tmp/canvas/bam", shell=True)
@@ -29,6 +45,7 @@ call("mkdir /tmp/canvas/outdir", shell=True)
 
 call("cp %s /tmp/canvas/bam" % bam_file, shell=True)
 call("/medstore/IGV_Folders/samtools index /tmp/canvas/bam/%s" % filename, shell=True)
+
 
 command = """usr/bin/mono /apps/CLC_ExternalApps/canvas/1.11.0/Canvas.exe %s -b
 /tmp/canvas/bam/%s
@@ -67,4 +84,4 @@ call("gunzip /tmp/canvas/outdir/CNV.vcf.gz", shell=True)
 call("mv /tmp/canvas/outdir/CNV.vcf %s" % vcf_out, shell=True)
 call("mv /tmp/canvas/outdir/CNV_log2.cn %s" % cnv_copynumber, shell=True)
 call("mv /tmp/canvas/outdir/CNV.CoverageAndVariantFrequency.txt %s" % cnv_text, shell=True)
-#call("rm -rf /tmp/canvas", shell=True)
+call("rm -rf /tmp/canvas", shell=True)
