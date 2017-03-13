@@ -21,13 +21,18 @@ if "Somatic" in mode:
 else:
     mode = "Germline-WGS"
 
+call("mkdir /tmp/canvas", shell=True)
+call("mkdir /tmp/canvas/bam", shell=True)
+call("mkdir /tmp/canvas/outdir", shell=True)
 
+indexed = 0
 
 array = bam_file.split("/")
 filename = array[-1]
 bam_path = "/tmp/canvas/%s" % filename
 
 error_file.write("Bampath before looking in text: %s" % bam_path)
+error_file.write("\n")
 
 if ".txt" in str(bam_file):
     bam_temp = bam_file.split("/")
@@ -38,18 +43,19 @@ if ".txt" in str(bam_file):
     array = bam_file.split("/")
     filename = array[-1]
     bam_path = "/tmp/canvas/%s" % filename
+    indexed = 1
 
 error_file.write("Bampath after looking in text: %s" % bam_path)
 
-call("mkdir /tmp/canvas", shell=True)
-call("mkdir /tmp/canvas/bam", shell=True)
-call("mkdir /tmp/canvas/outdir", shell=True)
+call("cp %s* /tmp/canvas/bam" % bam_file, shell=True)
+call("cp -r /medstore/External_References/Canvas_CLC_HG19_Dataset /tmp/canvas/", shell=True)
+call("cp -r /medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta* /tmp/canvas/Canvas_CLC_HG19_Dataset", shell=True)
 
-call("cp %s /tmp/canvas/bam" % bam_file, shell=True)
-call("/medstore/IGV_Folders/samtools index /tmp/canvas/bam/%s" % filename, shell=True)
+if not indexed:
+    call("module load samtools/1.3.1", shell=True)
+    call("/medstore/IGV_Folders/samtools index /tmp/canvas/bam/%s" % filename, shell=True)
 
-
-command = """usr/bin/mono /apps/CLC_ExternalApps/canvas/1.11.0/Canvas.exe %s -b
+command = """/usr/bin/mono /apps/CLC_ExternalApps/canvas/1.11.0/Canvas.exe %s -b
 /tmp/canvas/bam/%s
 --b-allele-vcf=/tmp/canvas/Canvas_CLC_HG19_Dataset/dbsnp_common_all_20160601.vcf
 --exclude-non-het-b-allele-sites
