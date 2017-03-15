@@ -17,7 +17,7 @@ cnv_copynumber = argv[5]
 error_file = open("/tmp/canvaserror.log", 'w+')
 error_file.write(str(socket.gethostname()))
 
-for i in str(argv):
+for i in argv:
     print(i)
     error_file.write(i + "\n")
 
@@ -49,11 +49,12 @@ if ".txt" in str(bam_file):
     filename = array[-1]
     bam_path = "/tmp/canvas/%s" % filename
     indexed = 1
+    print(str(bam_file))
 
 error_file.write("Bampath after looking in text: %s" % bam_path)
 
-call("cp %s /tmp/canvas/bam/%s" % (bam_file, bam_file), shell=True)
-call("cp %s.bai /tmp/canvas/bam/%s.bai" % (bam_file, bam_file), shell=True)
+call("cp %s -t /tmp/canvas/bam/%s" % (bam_file, bam_file), shell=True)
+call("cp %s.bai -t /tmp/canvas/bam/%s.bai" % (bam_file, bam_file), shell=True)
 call("cp -r /medstore/External_References/Canvas_CLC_HG19_Dataset /tmp/canvas/", shell=True)
 call("cp -r /medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta* /tmp/canvas/Canvas_CLC_HG19_Dataset", shell=True)
 
