@@ -64,20 +64,26 @@ if not indexed:
     call("module load samtools/1.3.1", shell=True)
     call("/medstore/IGV_Folders/samtools index /tmp/canvas/bam/%s" % filename, shell=True)
 
-command = """/usr/bin/mono /apps/CLC_ExternalApps/canvas/1.11.0/Canvas.exe %s -b
-/tmp/canvas/bam/%s
---b-allele-vcf=/tmp/canvas/Canvas_CLC_HG19_Dataset/dbsnp_common_all_20160601.vcf
---exclude-non-het-b-allele-sites
--o /tmp/canvas/outdir
---reference=/tmp/canvas/Canvas_CLC_HG19_Dataset/kmer.fa
--g /tmp/canvas/Canvas_CLC_HG19_Dataset/
--f /tmp/canvas/Canvas_CLC_HG19_Dataset/filter13.bed
--n WGS
---custom-parameters=CanvasBin,-p""" % (mode, filename)
+#command = """/usr/bin/mono /apps/CLC_ExternalApps/canvas/1.11.0/Canvas.exe %s -b
+#/tmp/canvas/bam/%s
+#--b-allele-vcf=/tmp/canvas/Canvas_CLC_HG19_Dataset/dbsnp_common_all_20160601.vcf
+#--exclude-non-het-b-allele-sites
+#-o /tmp/canvas/outdir
+# --reference=/tmp/canvas/Canvas_CLC_HG19_Dataset/kmer.fa
+#-g /tmp/canvas/Canvas_CLC_HG19_Dataset/
+#-f /tmp/canvas/Canvas_CLC_HG19_Dataset/filter13.bed
+#-n WGS
+#--custom-parameters=CanvasBin,-p""" % (mode, filename)
 
 error_file.write("Command to run: %s" % command)
 
-call(command, shell=True)
+call(["/usr/bin/mono", "/apps/CLC_ExternalApps/canvas/1.11.0/Canvas.exe", str(mode), "-b",
+      "/tmp/canvas/bam/" + str(filename), "--b-allele-vcf=/tmp/canvas/Canvas_CLC_HG19_Dataset/dbsnp_common_all_20160601.vcf",
+      "-o", "/tmp/canvas/outdir", "--reference=/tmp/canvas/Canvas_CLC_HG19_Dataset/kmer.fa",
+      "-g", "/tmp/canvas/Canvas_CLC_HG19_Dataset/", "-f", "/tmp/canvas/Canvas_CLC_HG19_Dataset/filter13.bed",
+      "-n", "WGS", "--custom-parameters=CanvasBin,-p"])
+
+#call(command, shell=True)
 
 with open("/tmp/canvas/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as INFILE:
     with open("/tmp/canvas/outdir/CNV_log2.cn", "w+") as OUTFILE:
