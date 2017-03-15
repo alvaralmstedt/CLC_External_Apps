@@ -43,7 +43,7 @@ if ".txt" in str(bam_file):
     bam_temp = bam_file.split("/")
     bam_file = "/" + str("/".join(bam_temp[1:]))
     bam_text_file = open(bam_file, "r")
-    bam_file = bam_text_file.readline()
+    bam_file = bam_text_file.readline().rstrip()
     bam_text_file.close()
     array = bam_file.split("/")
     filename = array[-1]
@@ -56,7 +56,7 @@ if ".txt" in str(bam_file):
 error_file.write("Bampath after looking in text: %s" % bam_path)
 
 call(["cp", str(bam_file), "-t", str(bam_path)])
-call(["cp", str(bam_file) + ".bai", "-t", str(bam_path) + ".bai"])
+call(["cp", str(bam_file) + ".bai", "-t", str(bam_path)])
 call("cp -r /medstore/External_References/Canvas_CLC_HG19_Dataset /tmp/canvas/", shell=True)
 call("cp -r /medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta* /tmp/canvas/Canvas_CLC_HG19_Dataset", shell=True)
 
