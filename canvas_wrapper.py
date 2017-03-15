@@ -4,6 +4,7 @@ import os
 from subprocess import call
 from sys import argv
 from math import log
+import socket
 
 bam_file = argv[1]
 mode = argv[2]
@@ -14,7 +15,11 @@ cnv_text = argv[4]
 cnv_copynumber = argv[5]
 
 error_file = open("/tmp/canvaserror.log", 'w+')
+error_file.write(str(socket.gethostname()))
 
+for i in str(argv):
+    print(i)
+    error_file.write(i + "\n")
 
 if "Somatic" in mode:
     mode = "Somatic-WGS"
@@ -47,7 +52,7 @@ if ".txt" in str(bam_file):
 
 error_file.write("Bampath after looking in text: %s" % bam_path)
 
-call("cp %s* /tmp/canvas/bam" % bam_file, shell=True)
+call("cp %s* /tmp/canvas/bam/" % bam_file, shell=True)
 call("cp -r /medstore/External_References/Canvas_CLC_HG19_Dataset /tmp/canvas/", shell=True)
 call("cp -r /medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta* /tmp/canvas/Canvas_CLC_HG19_Dataset", shell=True)
 
