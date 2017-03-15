@@ -49,12 +49,13 @@ if ".txt" in str(bam_file):
     filename = array[-1]
     bam_path = "/tmp/canvas/%s" % filename
     indexed = 1
-    print(str(bam_file))
+    print("bam_file: " + str(bam_file))
+    error_file.write("Bamfile after looking in text: %s" % bam_file)
 
 error_file.write("Bampath after looking in text: %s" % bam_path)
 
-call("cp %s -t /tmp/canvas/bam/%s" % (bam_file, bam_file), shell=True)
-call("cp %s.bai -t /tmp/canvas/bam/%s.bai" % (bam_file, bam_file), shell=True)
+call("cp %s -t %s" % (bam_file, bam_path), shell=True)
+call("cp %s.bai -t %s.bai" % (bam_file, bam_path), shell=True)
 call("cp -r /medstore/External_References/Canvas_CLC_HG19_Dataset /tmp/canvas/", shell=True)
 call("cp -r /medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta* /tmp/canvas/Canvas_CLC_HG19_Dataset", shell=True)
 
