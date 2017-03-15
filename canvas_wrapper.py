@@ -47,7 +47,7 @@ if ".txt" in str(bam_file):
     bam_text_file.close()
     array = bam_file.split("/")
     filename = array[-1]
-    bam_path = "/tmp/canvas/%s" % filename
+    bam_path = "/tmp/canvas/%s" % filename.rstrip()
     indexed = 1
     print("bam_file: " + str(bam_file))
     error_file.write("Bamfile after looking in text: %s" % bam_file)
