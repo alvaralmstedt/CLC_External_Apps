@@ -75,6 +75,8 @@ command = """/usr/bin/mono /apps/CLC_ExternalApps/canvas/1.11.0/Canvas.exe %s -b
 -n WGS
 --custom-parameters=CanvasBin,-p""" % (mode, filename)
 
+error_file.write("Command to run: %s" % command)
+
 call(command, shell=True)
 
 with open("/tmp/canvas/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as INFILE:
