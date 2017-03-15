@@ -54,8 +54,8 @@ if ".txt" in str(bam_file):
 
 error_file.write("Bampath after looking in text: %s" % bam_path)
 
-call("cp %s -t %s" % (bam_file, bam_path), shell=True)
-call("cp %s.bai -t %s.bai" % (bam_file, bam_path), shell=True)
+call(["cp", str(bam_file), "-t", str(bam_path)])
+call(["cp", str(bam_file) + ".bai", "-t", str(bam_path) + ".bai"])
 call("cp -r /medstore/External_References/Canvas_CLC_HG19_Dataset /tmp/canvas/", shell=True)
 call("cp -r /medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta* /tmp/canvas/Canvas_CLC_HG19_Dataset", shell=True)
 
