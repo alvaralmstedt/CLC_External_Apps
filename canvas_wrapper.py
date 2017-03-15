@@ -52,7 +52,8 @@ if ".txt" in str(bam_file):
 
 error_file.write("Bampath after looking in text: %s" % bam_path)
 
-call("cp %s* /tmp/canvas/bam/" % bam_file, shell=True)
+call("cp %s /tmp/canvas/bam/%s" % (bam_file, bam_file), shell=True)
+call("cp %s.bai /tmp/canvas/bam/%s.bai" % (bam_file, bam_file), shell=True)
 call("cp -r /medstore/External_References/Canvas_CLC_HG19_Dataset /tmp/canvas/", shell=True)
 call("cp -r /medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta* /tmp/canvas/Canvas_CLC_HG19_Dataset", shell=True)
 
