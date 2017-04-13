@@ -80,6 +80,7 @@ with open("/tmp/canvas/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as INFI
             OUTFILE2.write("Sample\tChromosome\tStart\tEnd\tCNV_Called\n")
             for line in INFILE:
                 array_2 = line.split("\t")
+                print("array_2: " + array_2)
                 length = len(array_2)
                 cnv = 0
                 ncov = 0
