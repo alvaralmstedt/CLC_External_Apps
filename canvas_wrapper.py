@@ -84,23 +84,19 @@ with open("/tmp/canvas/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as INFI
                 length = len(array_2)
                 cnv = 0
                 ncov = 0
-                for val in array_2[3]:
+                for val in array_2:
                     try:
                         val = float(val)
                     except ValueError:
                         print("%s cannot be converted to a float" % val)
 
-
-                for val in array_2[6]:
-                    try:
-                        val = float(val)
-                    except ValueError:
-                        print("%s cannot be converted to a float" % val)
 
                 try:
                     cnv = array_2[3]
                     ncov = array_2[6]
                 except IndexError:
+                    print("Value 3: %s" % array_2[3])
+                    print ("Value 6: %s" % array_2[6])
                     continue
 
                 # except ValueError:
