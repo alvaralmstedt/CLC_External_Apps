@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/CLC_External_Apps.iml" filepath="$PROJECT_DIR$/.idea/CLC_External_Apps.iml" />
       <module fileurl="file://$USER_HOME$/Dropbox/repos/py_scripts/.idea/py_scripts.iml" filepath="$USER_HOME$/Dropbox/repos/py_scripts/.idea/py_scripts.iml" />
+      <module fileurl="file://$USER_HOME$/Dropbox/repos/python_genome_ref_collab/.idea/python_genome_ref_collab.iml" filepath="$USER_HOME$/Dropbox/repos/python_genome_ref_collab/.idea/python_genome_ref_collab.iml" />
     </modules>
   </component>
 </project>

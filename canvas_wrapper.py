@@ -84,20 +84,36 @@ with open("/tmp/canvas/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as INFI
                 length = len(array_2)
                 cnv = 0
                 ncov = 0
-                try:
-                    cnv = int(array_2[3])
-                    ncov = int(array_2[6])
-                except ValueError:
+                for val in array_2[3]
                     try:
-                        cnv = float(array_2[3])
-                        ncov = float(array_2[6])
+                        val = float(val)
                     except ValueError:
-                        try:
-                            print(str(array_2[3]) + " Cannot be converted to an int or float")
-                            print(str(array_2[6]) + " Cannot be converted to an int or float")
-                            continue
-                        except IndexError:
-                            continue
+                        print("%s cannot be converted to a float" % val)
+
+
+                for val in array_2[6]:
+                    try:
+                        val = float(val)
+                    except ValueError:
+                        print("%s cannot be converted to a float" % val)
+
+                try:
+                    cnv = array_2[3]
+                    ncov = array_2[6]
+                except IndexError:
+                    continue
+
+                # except ValueError:
+                #     try:
+                #         cnv = float(array_2[3])
+                #         ncov = float(array_2[6])
+                #     except ValueError:
+                #         try:
+                #             print(str(array_2[3]) + " Cannot be converted to an int or float")
+                #             print(str(array_2[6]) + " Cannot be converted to an int or float")
+                #             continue
+                #         except IndexError:
+                #             continue
                 if ncov > 0 and cnv > 0:
                     cnvlog = log(cnv, 10) / log(2)
                     covlog = log(ncov, 10) / log(2)
@@ -106,7 +122,7 @@ with open("/tmp/canvas/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as INFI
                         covlog = covlog - 1
 
                     OUTFILE.write("Observed_CNVs\t%s\t%s\t%s\t%s" % (array_2[0], array_2[1], array_2[2], covlog))
-                    OUTFILE2.write("Called_CNVs\t%s\t%s\t%s\t%s" % (array_2[0], array_2[1], array_2[2], cnvlog))
+                    OUTFILE2.write("Called_CNVs\t%s\t%s\t%s\t%s\n" % (array_2[0], array_2[1], array_2[2], cnvlog))
 
 call("gunzip /tmp/canvas/outdir/CNV.vcf.gz", shell=True)
 call("mv /tmp/canvas/outdir/CNV.vcf %s" % vcf_out, shell=True)
