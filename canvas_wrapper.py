@@ -84,7 +84,7 @@ with open("/tmp/canvas/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as INFI
                 length = len(array_2)
                 cnv = 0
                 ncov = 0
-                for val in array_2[3]
+                for val in array_2[3]:
                     try:
                         val = float(val)
                     except ValueError:
@@ -118,8 +118,8 @@ with open("/tmp/canvas/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as INFI
                     cnvlog = log(cnv, 10) / log(2)
                     covlog = log(ncov, 10) / log(2)
                     if not array_2[0] == "X" or not array_2[0] == "Y":
-                        cnvlog = cnvlog - 1
-                        covlog = covlog - 1
+                        cnvlog  -= 1
+                        covlog  -= 1
 
                     OUTFILE.write("Observed_CNVs\t%s\t%s\t%s\t%s" % (array_2[0], array_2[1], array_2[2], covlog))
                     OUTFILE2.write("Called_CNVs\t%s\t%s\t%s\t%s\n" % (array_2[0], array_2[1], array_2[2], cnvlog))
