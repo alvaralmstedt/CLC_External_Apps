@@ -110,7 +110,7 @@ with open("/tmp/canvas/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as INFI
                 #             continue
                 #         except IndexError:
                 #             continue
-                if ncov > 0 and cnv > 0:
+                if isinstance(ncov, float) and ncov > 0 and isinstance(cnv, float) and cnv > 0:
                     cnvlog = log(cnv, 10) / log(2)
                     covlog = log(ncov, 10) / log(2)
                     if not array_2[0] == "X" or not array_2[0] == "Y":
