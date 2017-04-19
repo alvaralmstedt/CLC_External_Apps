@@ -14,6 +14,7 @@ vcf_out = argv[3]
 cnv_text = argv[4]
 cnv_copynumber = argv[5]
 
+
 error_file = open("/tmp/canvaserror.log", 'w+')
 error_file.write(str(socket.gethostname()))
 
@@ -88,15 +89,15 @@ with open("/tmp/canvas/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as INFI
                     try:
                         val = float(val)
                     except ValueError:
-                        print("%s cannot be converted to a float" % val)
+                    #    print("%s cannot be converted to a float" % val)
 
 
                 try:
                     cnv = array_2[3]
                     ncov = array_2[6]
                 except IndexError:
-                    print("Value 3: %s" % array_2[3])
-                    print ("Value 6: %s" % array_2[6])
+                 #   print("Value 3: %s" % array_2[3])
+                 #   print("Value 6: %s" % array_2[6])
                     continue
 
                 # except ValueError:
@@ -114,8 +115,8 @@ with open("/tmp/canvas/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as INFI
                     cnvlog = log(cnv, 10) / log(2)
                     covlog = log(ncov, 10) / log(2)
                     if not array_2[0] == "X" or not array_2[0] == "Y":
-                        cnvlog  -= 1
-                        covlog  -= 1
+                        cnvlog -= 1
+                        covlog -= 1
 
                     OUTFILE.write("Observed_CNVs\t%s\t%s\t%s\t%s" % (array_2[0], array_2[1], array_2[2], covlog))
                     OUTFILE2.write("Called_CNVs\t%s\t%s\t%s\t%s\n" % (array_2[0], array_2[1], array_2[2], cnvlog))
@@ -125,4 +126,4 @@ call("mv /tmp/canvas/outdir/CNV.vcf %s" % vcf_out, shell=True)
 call("mv /tmp/canvas/outdir/CNV_observed.seg %s" % cnv_copynumber, shell=True)
 call("mv /tmp/canvas/outdir/CNV_called.seg %s" % cnv_copynumber, shell=True)
 call("mv /tmp/canvas/outdir/CNV.CoverageAndVariantFrequency.txt %s" % cnv_text, shell=True)
-#call("rm -rf /tmp/canvas", shell=True)
+call("rm -rf /tmp/canvas", shell=True)
