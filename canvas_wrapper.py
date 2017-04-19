@@ -12,7 +12,8 @@ mode = argv[2]
 #vcf_in_2 = argv[4]
 vcf_out = argv[3]
 cnv_text = argv[4]
-cnv_copynumber = argv[5]
+cnv_copynumber_obs = argv[5]
+cnv_copynumber_call = argv[6]
 
 
 error_file = open("/tmp/canvaserror.log", 'w+')
@@ -30,6 +31,7 @@ else:
 call("mkdir /tmp/canvas", shell=True)
 call("mkdir /tmp/canvas/bam", shell=True)
 call("mkdir /tmp/canvas/outdir", shell=True)
+call("hostname")
 
 indexed = 0
 
@@ -123,7 +125,7 @@ with open("/tmp/canvas/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as INFI
 
 call("gunzip /tmp/canvas/outdir/CNV.vcf.gz", shell=True)
 call("mv /tmp/canvas/outdir/CNV.vcf %s" % vcf_out, shell=True)
-call("mv /tmp/canvas/outdir/CNV_observed.seg %s" % cnv_copynumber, shell=True)
-call("mv /tmp/canvas/outdir/CNV_called.seg %s" % cnv_copynumber, shell=True)
+call("mv /tmp/canvas/outdir/CNV_observed.seg %s" % cnv_copynumber_obs, shell=True)
+call("mv /tmp/canvas/outdir/CNV_called.seg %s" % cnv_copynumber_call, shell=True)
 call("mv /tmp/canvas/outdir/CNV.CoverageAndVariantFrequency.txt %s" % cnv_text, shell=True)
 call("rm -rf /tmp/canvas", shell=True)
