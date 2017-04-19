@@ -89,7 +89,7 @@ with open("/tmp/canvas/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as INFI
                     try:
                         val = float(val)
                     except ValueError:
-                    #    print("%s cannot be converted to a float" % val)
+                        continue
 
 
                 try:
