@@ -31,7 +31,7 @@ else:
 call("mkdir /tmp/canvas", shell=True)
 call("mkdir /tmp/canvas/bam", shell=True)
 call("mkdir /tmp/canvas/outdir", shell=True)
-call("nproc")
+call("hostname")
 
 indexed = 0
 
