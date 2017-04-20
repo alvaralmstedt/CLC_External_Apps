@@ -87,16 +87,18 @@ with open("/tmp/canvas/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as INFI
                 length = len(array_2)
                 cnv = 0
                 ncov = 0
-                for val in array_2:
-                    try:
-                        val = float(val)
-                    except ValueError:
-                        continue
+                # for val in array_2:
+                #     try:
+                #         val = float(val)
+                #     except ValueError:
+                #         continue
 
 
                 try:
                     cnv = array_2[3]
                     ncov = array_2[6]
+                    print("cnv: ", cnv)
+                    print("ncov: ", ncov)
                 except IndexError:
                  #   print("Value 3: %s" % array_2[3])
                  #   print("Value 6: %s" % array_2[6])
@@ -113,7 +115,9 @@ with open("/tmp/canvas/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as INFI
                 #             continue
                 #         except IndexError:
                 #             continue
-                if isinstance(ncov, float) and ncov > 0 and isinstance(cnv, float) and cnv > 0:
+                #if isinstance(ncov, float) and ncov > 0 and isinstance(cnv, float) and cnv > 0:
+                if float(ncov) > 0 and float(cnv) > 0:
+                    print("PASSED")
                     cnvlog = log(cnv, 10) / log(2)
                     covlog = log(ncov, 10) / log(2)
                     if not array_2[0] == "X" or not array_2[0] == "Y":
@@ -128,4 +132,4 @@ call("mv /tmp/canvas/outdir/CNV.vcf %s" % vcf_out, shell=True)
 call("mv /tmp/canvas/outdir/CNV_observed.seg %s" % cnv_copynumber_obs, shell=True)
 call("mv /tmp/canvas/outdir/CNV_called.seg %s" % cnv_copynumber_call, shell=True)
 call("mv /tmp/canvas/outdir/CNV.CoverageAndVariantFrequency.txt %s" % cnv_text, shell=True)
-call("rm -rf /tmp/canvas", shell=True)
+#call("rm -rf /tmp/canvas", shell=True)
