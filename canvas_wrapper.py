@@ -28,16 +28,16 @@ if "Somatic" in mode:
 else:
     mode = "Germline-WGS"
 
-call("mkdir /tmp/canvas", shell=True)
-call("mkdir /tmp/canvas/bam", shell=True)
-call("mkdir /tmp/canvas/outdir", shell=True)
+call("mkdir /tmp/canvas_dir", shell=True)
+call("mkdir /tmp/canvas_dir/bam", shell=True)
+call("mkdir /tmp/canvas_dir/outdir", shell=True)
 call("hostname")
 
 indexed = 0
 
 array = bam_file.split("/")
 filename = array[-1]
-bam_path = "/tmp/canvas/bam/%s" % filename
+bam_path = "/tmp/canvas_dir/bam/%s" % filename
 
 error_file.write("Bampath before looking in text: %s" % bam_path)
 error_file.write("\n")
@@ -51,7 +51,7 @@ if ".txt" in str(bam_file):
     array = bam_file.split("/")
     filename = array[-1]
 #    bam_path = "/tmp/canvas/bam/%s" % filename.rstrip()
-    bam_path = "/tmp/canvas/bam/"
+    bam_path = "/tmp/canvas_dir/bam/"
     indexed = 1
     print("bam_file: " + str(bam_file))
     error_file.write("Bamfile after looking in text: %s\n" % bam_file)
@@ -60,25 +60,25 @@ error_file.write("Bampath after looking in text: %s" % bam_path)
 
 call(["cp", str(bam_file), "-t", str(bam_path)])
 call(["cp", str(bam_file) + ".bai", "-t", str(bam_path)])
-call("cp -r /medstore/External_References/Canvas_CLC_HG19_Dataset /tmp/canvas/", shell=True)
-call("cp -r /medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta* /tmp/canvas/Canvas_CLC_HG19_Dataset", shell=True)
+call("cp -r /medstore/External_References/Canvas_CLC_HG19_Dataset /tmp/canvas_dir/", shell=True)
+call("cp -r /medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta* /tmp/canvas_dir/Canvas_CLC_HG19_Dataset", shell=True)
 
 if not indexed:
     call("module load samtools/1.3.1", shell=True)
-    call("/medstore/IGV_Folders/samtools index /tmp/canvas/bam/%s" % filename, shell=True)
+    call("/medstore/IGV_Folders/samtools index /tmp/canvas_dir/bam/%s" % filename, shell=True)
 
 call(["/usr/bin/mono", "/apps/CLC_ExternalApps/canvas/1.11.0/Canvas.exe", str(mode), "-b",
-      "/tmp/canvas/bam/" + str(filename), "--b-allele-vcf=/tmp/canvas/Canvas_CLC_HG19_Dataset/dbsnp_common_all_20160601.vcf",
-      "-o", "/tmp/canvas/outdir", "--reference=/tmp/canvas/Canvas_CLC_HG19_Dataset/kmer.fa",
-      "-g", "/tmp/canvas/Canvas_CLC_HG19_Dataset/", "-f", "/tmp/canvas/Canvas_CLC_HG19_Dataset/filter13.bed",
+      "/tmp/canvas_dir/bam/" + str(filename), "--b-allele-vcf=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/dbsnp_common_all_20160601.vcf",
+      "-o", "/tmp/canvas_dir/outdir", "--reference=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/kmer.fa",
+      "-g", "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/", "-f", "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/filter13.bed",
       "-n", "WGS", "--custom-parameters=CanvasBin,-p"])
 
 
-with open("/tmp/canvas/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as INFILE:
-    with open("/tmp/canvas/outdir/CNV_observed.seg", "w+") as OUTFILE:
+with open("/tmp/canvas_dir/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as INFILE:
+    with open("/tmp/canvas_dir/outdir/CNV_observed.seg", "w+") as OUTFILE:
         OUTFILE.write("#track graphType=points maxHeightPixels=300:300:300 color=0,220,0 altColor=220,0,0\n")
         OUTFILE.write("Sample\tChromosome\tStart\tEnd\tCNV_Observed\n")
-        with open("/tmp/canvas/outdir/CNV_called.seg", "w+") as OUTFILE2:
+        with open("/tmp/canvas_dir/outdir/CNV_called.seg", "w+") as OUTFILE2:
             OUTFILE2.write("#track graphType=points maxHeightPixels=300:300:300 color=0,220,0 altColor=220,0,0\n")
             OUTFILE2.write("Sample\tChromosome\tStart\tEnd\tCNV_Called\n")
             for line in INFILE:
@@ -127,9 +127,9 @@ with open("/tmp/canvas/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as INFI
                     OUTFILE.write("Observed_CNVs\t%s\t%s\t%s\t%s" % (array_2[0], array_2[1], array_2[2], covlog))
                     OUTFILE2.write("Called_CNVs\t%s\t%s\t%s\t%s\n" % (array_2[0], array_2[1], array_2[2], cnvlog))
 
-call("gunzip /tmp/canvas/outdir/CNV.vcf.gz", shell=True)
-call("mv /tmp/canvas/outdir/CNV.vcf %s" % vcf_out, shell=True)
-call("mv /tmp/canvas/outdir/CNV_observed.seg %s" % cnv_copynumber_obs, shell=True)
-call("mv /tmp/canvas/outdir/CNV_called.seg %s" % cnv_copynumber_call, shell=True)
-call("mv /tmp/canvas/outdir/CNV.CoverageAndVariantFrequency.txt %s" % cnv_text, shell=True)
-#call("rm -rf /tmp/canvas", shell=True)
+call("gunzip /tmp/canvas_dir/outdir/CNV.vcf.gz", shell=True)
+call("mv /tmp/canvas_dir/outdir/CNV.vcf %s" % vcf_out, shell=True)
+call("mv /tmp/canvas_dir/outdir/CNV_observed.seg %s" % cnv_copynumber_obs, shell=True)
+call("mv /tmp/canvas_dir/outdir/CNV_called.seg %s" % cnv_copynumber_call, shell=True)
+call("mv /tmp/canvas_dir/outdir/CNV.CoverageAndVariantFrequency.txt %s" % cnv_text, shell=True)
+#call("rm -rf /tmp/canvas_dir", shell=True)
