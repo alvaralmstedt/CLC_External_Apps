@@ -95,8 +95,8 @@ with open("/tmp/canvas_dir/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as 
 
 
                 try:
-                    cnv = array_2[3]
-                    ncov = array_2[6]
+                    cnv = float(array_2[3])
+                    ncov = float(array_2[6])
                     print("cnv: ", cnv)
                     print("ncov: ", ncov)
                 except IndexError:
@@ -116,7 +116,7 @@ with open("/tmp/canvas_dir/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as 
                 #         except IndexError:
                 #             continue
                 #if isinstance(ncov, float) and ncov > 0 and isinstance(cnv, float) and cnv > 0:
-                if float(ncov) > 0 and float(cnv) > 0:
+                if ncov > 0 and cnv > 0:
                     print("PASSED")
                     cnvlog = log(cnv, 10) / log(2)
                     covlog = log(ncov, 10) / log(2)
