@@ -99,9 +99,10 @@ with open("/tmp/canvas_dir/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as 
                     ncov = float(array_2[6])
                     print("cnv: ", cnv)
                     print("ncov: ", ncov)
-                except IndexError:
+                except (IndexError, ValueError) as e:
                  #   print("Value 3: %s" % array_2[3])
                  #   print("Value 6: %s" % array_2[6])
+                    print(e)
                     continue
 
                 # except ValueError:
