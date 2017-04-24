@@ -125,7 +125,7 @@ with open("/tmp/canvas_dir/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as 
                         cnvlog -= 1
                         covlog -= 1
 
-                    OUTFILE.write("Observed_CNVs\t%s\t%s\t%s\t%s" % (array_2[0], array_2[1], array_2[2], covlog))
+                    OUTFILE.write("Observed_CNVs\t%s\t%s\t%s\t%s\n" % (array_2[0], array_2[1], array_2[2], covlog))
                     OUTFILE2.write("Called_CNVs\t%s\t%s\t%s\t%s\n" % (array_2[0], array_2[1], array_2[2], cnvlog))
 
 call("gunzip /tmp/canvas_dir/outdir/CNV.vcf.gz", shell=True)
@@ -133,4 +133,4 @@ call("mv /tmp/canvas_dir/outdir/CNV.vcf %s" % vcf_out, shell=True)
 call("mv /tmp/canvas_dir/outdir/CNV_observed.seg %s" % cnv_copynumber_obs, shell=True)
 call("mv /tmp/canvas_dir/outdir/CNV_called.seg %s" % cnv_copynumber_call, shell=True)
 call("mv /tmp/canvas_dir/outdir/CNV.CoverageAndVariantFrequency.txt %s" % cnv_text, shell=True)
-#call("rm -rf /tmp/canvas_dir", shell=True)
+call("rm -rf /tmp/canvas_dir", shell=True)
