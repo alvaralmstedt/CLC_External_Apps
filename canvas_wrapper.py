@@ -119,8 +119,8 @@ with open("/tmp/canvas_dir/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as 
                 #if isinstance(ncov, float) and ncov > 0 and isinstance(cnv, float) and cnv > 0:
                 if ncov > 0 and cnv > 0:
                     print("PASSED")
-                    cnvlog = log(cnv, 10) / log(2)
-                    covlog = log(ncov, 10) / log(2)
+                    cnvlog = log(cnv, 2)
+                    covlog = log(ncov, 2)
                     if not array_2[0] == "X" or not array_2[0] == "Y":
                         cnvlog -= 1
                         covlog -= 1
