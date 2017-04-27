@@ -22,7 +22,7 @@ def igv_modification(user, infile):
     with open("/medstore/IGV_Folders/igv/%s_igv.xml" % user, "w+") as userfile:
         bam = os.path.basename(infile)
         newfile = []
-        for line in userfile[:-2]:
+        for line in userfile.readlines[:-2]:
         #    if "<Resource name=" in line:
                 newfile.append(line)
         newfile.append('\t\t<Resource name="%s" path="http://medstore.sahlgrenska.gu.se:8008/data/%s/%s"' % (bam, user, bam))
@@ -102,12 +102,6 @@ with open("/tmp/canvas_dir/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as 
                 length = len(array_2)
                 cnv = 0
                 ncov = 0
-                # for val in array_2:
-                #     try:
-                #         val = float(val)
-                #     except ValueError:
-                #         continue
-
 
                 try:
                     cnv = float(array_2[3])
@@ -115,23 +109,9 @@ with open("/tmp/canvas_dir/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as 
                     print("cnv: ", cnv)
                     print("ncov: ", ncov)
                 except (IndexError, ValueError) as e:
-                 #   print("Value 3: %s" % array_2[3])
-                 #   print("Value 6: %s" % array_2[6])
                     print(e)
                     continue
 
-                # except ValueError:
-                #     try:
-                #         cnv = float(array_2[3])
-                #         ncov = float(array_2[6])
-                #     except ValueError:
-                #         try:
-                #             print(str(array_2[3]) + " Cannot be converted to an int or float")
-                #             print(str(array_2[6]) + " Cannot be converted to an int or float")
-                #             continue
-                #         except IndexError:
-                #             continue
-                #if isinstance(ncov, float) and ncov > 0 and isinstance(cnv, float) and cnv > 0:
                 if ncov > 0 and cnv > 0:
                     print("PASSED")
                     cnvlog = log(cnv, 2)
