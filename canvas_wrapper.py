@@ -14,7 +14,22 @@ vcf_out = argv[3]
 cnv_text = argv[4]
 cnv_copynumber_obs = argv[5]
 cnv_copynumber_call = argv[6]
+uname = argv[7]
 
+igv_data_folder = "/medstore/IGV_Folders/igv/data/%s" % uname
+
+def igv_modification(user, infile):
+    with open("/medstore/IGV_Folders/igv/%s_igv.xml" % user, "w+") as userfile:
+        bam = os.path.basename(infile)
+        newfile = []
+        for line in userfile:
+            if "<Resource name=" in line:
+                newfile.append(line)
+        newfile.append('\t\t<Resource name="%s" path="http://medstore.sahlgrenska.gu.se:8008/data/%s/%s"' % (bam, user, bam))
+        newfile.append("\t\</Category>")
+        newfile.append("</Global>")
+        for i in newfile:
+            userfile.write(i)
 
 error_file = open("/tmp/canvaserror.log", 'w+')
 error_file.write(str(socket.gethostname()))
@@ -130,7 +145,13 @@ with open("/tmp/canvas_dir/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as 
 
 call("gunzip /tmp/canvas_dir/outdir/CNV.vcf.gz", shell=True)
 call("mv /tmp/canvas_dir/outdir/CNV.vcf %s" % vcf_out, shell=True)
+call("cp /tmp/canvas_dir/outdir/CNV_observed.seg %s" % igv_data_folder, shell=True)
 call("mv /tmp/canvas_dir/outdir/CNV_observed.seg %s" % cnv_copynumber_obs, shell=True)
+call("cp /tmp/canvas_dir/outdir/CNV_called.seg %s" % igv_data_folder, shell=True)
 call("mv /tmp/canvas_dir/outdir/CNV_called.seg %s" % cnv_copynumber_call, shell=True)
 call("mv /tmp/canvas_dir/outdir/CNV.CoverageAndVariantFrequency.txt %s" % cnv_text, shell=True)
+
+igv_modification(uname, igv_data_folder + "/CNV_observed.seg")
+igv_modification(uname, igv_data_folder + "/CNV_called.seg")
+
 call("rm -rf /tmp/canvas_dir", shell=True)
