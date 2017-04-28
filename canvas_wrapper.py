@@ -26,7 +26,7 @@ def igv_modification(user, infile):
         #    if "<Resource name=" in line:
                 newfile.append(line)
         newfile.append('\t\t<Resource name="%s" path="http://medstore.sahlgrenska.gu.se:8008/data/%s/%s"' % (bam, user, bam))
-        newfile.append("\t\</Category>")
+        newfile.append("\t</Category>")
         newfile.append("</Global>")
         for i in newfile:
             userfile.write(i + "\n")
