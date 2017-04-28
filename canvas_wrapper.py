@@ -19,7 +19,7 @@ uname = argv[7]
 igv_data_folder = "/medstore/IGV_Folders/igv/data/%s" % uname
 
 def igv_modification(user, infile):
-    with open("/medstore/IGV_Folders/igv/%s_igv.xml" % user, "w+") as userfile:
+    with open("/medstore/IGV_Folders/igv/users/%s_igv.xml" % user, "w+") as userfile:
         bam = os.path.basename(infile)
         newfile = []
         for line in userfile.readlines()[:-2]:
@@ -29,7 +29,7 @@ def igv_modification(user, infile):
         newfile.append("\t\</Category>")
         newfile.append("</Global>")
         for i in newfile:
-            userfile.write(i)
+            userfile.write(i + "\n")
 
 error_file = open("/tmp/canvaserror.log", 'w+')
 error_file.write(str(socket.gethostname()))
