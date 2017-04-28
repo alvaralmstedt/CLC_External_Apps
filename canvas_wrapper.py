@@ -22,7 +22,7 @@ def igv_modification(user, infile):
     with open("/medstore/IGV_Folders/igv/%s_igv.xml" % user, "w+") as userfile:
         bam = os.path.basename(infile)
         newfile = []
-        for line in userfile.readlines[:-2]:
+        for line in userfile.readlines()[:-2]:
         #    if "<Resource name=" in line:
                 newfile.append(line)
         newfile.append('\t\t<Resource name="%s" path="http://medstore.sahlgrenska.gu.se:8008/data/%s/%s"' % (bam, user, bam))
