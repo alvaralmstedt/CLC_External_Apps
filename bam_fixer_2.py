@@ -63,8 +63,8 @@ if __name__ == "__main__":
     bwa_out = directory + "/bwa_out.sam"
     merged_bam = directory + "/merged.bam"
     sorted_bam = directory + "/merged_sorted.bam"
-    subprocess.call(["cat", outfile_perfect, ">>", bwa_out])
+    subprocess.call("cat %s >> %s" % (outfile_perfect, bwa_out), shell=True)
     subprocess.call(["samtools", "view", "-@", "40", bwa_out, "-o", merged_bam])
-    subprocess.call(["samtools", "sort", "-@", "-20", "-m", "2G", merged_bam, ">", sorted_bam])
+    subprocess.call(["samtools", "sort", "-@", "20", "-m", "2G", merged_bam, ">", sorted_bam])
     subprocess.call(["samtools", "index", sorted_bam])
     print("Location of output file: \n" + str(path.abspath(sorted_bam)))
