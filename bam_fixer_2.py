@@ -41,6 +41,8 @@ if __name__ == "__main__":
     subprocess.call("module load bwa/0.7.5a", shell=True)
     if ".bam" in infile:
         intermediary = infile.replace(".bam", ".sam")
+        print(str(infile))
+        print(str(intermediary))
         subprocess.call("samtools view %s -o %s -@ 8" % (infile, intermediary))
         sam_split(intermediary, outfile_perfect, outfile_secondary)
     elif ".sam" in infile:
