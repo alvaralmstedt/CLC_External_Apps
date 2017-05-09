@@ -10,7 +10,7 @@ third part software that wants more bwa-like bam/sam files (such as manta for ex
 """
 
 def sam_split(samfile_in, out_perfect, out_secondary):
-    with open(samfile_in) as sam_in:
+    with open(samfile_in, "r") as sam:
         with open(out_perfect, "w+") as perfect:
             with open(out_secondary, "w+") as secondary:
                 for line in sam:
@@ -43,7 +43,8 @@ if __name__ == "__main__":
         intermediary = infile.replace(".bam", ".sam")
         print(str(infile))
         print(str(intermediary))
-        subprocess.call("samtools view %s -o %s -@ 8" % (infile, intermediary), shell=True)
+        subprocess.call("samtools view %s -o %s -@ 40" % (infile, intermediary), shell=True)
+#        subprocess.call(["wait"])
         sam_split(intermediary, outfile_perfect, outfile_secondary)
     elif ".sam" in infile:
         sam_split(infile, outfile_perfect, outfile_secondary)
