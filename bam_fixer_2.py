@@ -37,8 +37,8 @@ if __name__ == "__main__":
     bwa_index = fasta_index.rsplit('.', 1)[0]
     directory = path.dirname(outfile_secondary)
 
-    call("module load samtools/1.3.1", shell=True)
-    call("module load bwa/0.7.5a", shell=True)
+    subprocess.call("module load samtools/1.3.1", shell=True)
+    subprocess.call("module load bwa/0.7.5a", shell=True)
     if ".bam" in infile:
         intermediary = infile.replace(".bam", ".sam")
         subprocess.call("samtools view %s -o %s -@ 8" % (infile, intermediary))
