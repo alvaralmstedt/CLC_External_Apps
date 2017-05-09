@@ -43,7 +43,7 @@ if __name__ == "__main__":
         intermediary = infile.replace(".bam", ".sam")
         print(str(infile))
         print(str(intermediary))
-        subprocess.call("samtools view %s -o %s -@ 8" % (infile, intermediary))
+        subprocess.call("samtools view %s -o %s -@ 8" % (infile, intermediary), shell=True)
         sam_split(intermediary, outfile_perfect, outfile_secondary)
     elif ".sam" in infile:
         sam_split(infile, outfile_perfect, outfile_secondary)
