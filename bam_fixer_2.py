@@ -36,15 +36,18 @@ if __name__ == "__main__":
     fasta_index = "/medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta.fai"
     bwa_index = fasta_index.rsplit('.', 1)[0]
     directory = path.dirname(outfile_secondary)
+    
+    samtools_module = "module load samtools/1.3.1"
+    bwa_module = "module load bwa/0.7.5a"
+    
+    #subprocess.call("module load samtools/1.3.1", shell=True)
+    #subprocess.call("module load bwa/0.7.5a", shell=True)
 
-    subprocess.call("module load samtools/1.3.1", shell=True)
-    subprocess.call("module load bwa/0.7.5a", shell=True)
     if ".bam" in infile:
         intermediary = infile.replace(".bam", ".sam")
         print(str(infile))
         print(str(intermediary))
         subprocess.call("samtools view %s -o %s -@ 40" % (infile, intermediary), shell=True)
-#        subprocess.call(["wait"])
         sam_split(intermediary, outfile_perfect, outfile_secondary)
     elif ".sam" in infile:
         sam_split(infile, outfile_perfect, outfile_secondary)
@@ -55,15 +58,17 @@ if __name__ == "__main__":
     #    sec_tmp.write(outfile_secondary)
     #    subprocess.call("mv %s %s" % (sec_tmp, outfile_secondary))
     secondary_tmp = outfile_secondary + "_temp"
-    subprocess.call("samtools view -ht %s %s > %s" % (fasta_index, outfile_secondary, secondary_tmp), shell=True)
+    subprocess.call("%s && samtools view -ht %s %s > %s" % (samtools_module, fasta_index, outfile_secondary, secondary_tmp), shell=True)
     subprocess.call(["mv", secondary_tmp, outfile_secondary])
-    subprocess.call("samtools fastq %s > %s/reads_interleaved.fastq" % (outfile_secondary, directory), shell=True)
-    subprocess.call(["bwa", "mem", bwa_index, "-p", directory + "/reads_interleaved.fastq", "-t", "40", ">", directory + "/bwa_out.sam"])
+    subprocess.call("%s && samtools fastq %s > %s/reads_interleaved.fastq" % (samtools_module, outfile_secondary, directory), shell=True)
+    subprocess.call("%s && bwa mem %s -p %s/reads_interleaved.fastq -t 40 > %s/bwa_out.sam" % (bwa_module ,bwa_index, directory, directory))
+    
     bwa_out = directory + "/bwa_out.sam"
     merged_bam = directory + "/merged.bam"
     sorted_bam = directory + "/merged_sorted.bam"
+    
     subprocess.call("cat %s >> %s" % (outfile_perfect, bwa_out), shell=True)
-    subprocess.call("samtools view -b -@ 40 %s -o %s" % (bwa_out, merged_bam), shell=True)
+    subprocess.call("%s && samtools view -b -@ 40 %s -o %s" % (samtools_module, bwa_out, merged_bam), shell=True)
     
     with open(sorted_bam, "w+") as sorted:
         sorted.write(subprocess.check_output(["samtools", "sort", "-@," "30", "-m", "2G,", str(merged_bam)]))
