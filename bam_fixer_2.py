@@ -58,13 +58,14 @@ if __name__ == "__main__":
     subprocess.call("samtools view -ht %s %s > %s" % (fasta_index, outfile_secondary, secondary_tmp), shell=True)
     subprocess.call(["mv", secondary_tmp, outfile_secondary])
     subprocess.call("samtools fastq %s > %s/reads_interleaved.fastq" % (outfile_secondary, directory), shell=True)
-    subprocess.call(["bwa", "mem", bwa_index, "-p", directory + "/reads_interleaved.fastq", "-t", "40", ">",
-                     directory + "/bwa_out.sam"])
+    subprocess.call(["bwa", "mem", bwa_index, "-p", directory + "/reads_interleaved.fastq", "-t", "40", ">", directory + "/bwa_out.sam"])
     bwa_out = directory + "/bwa_out.sam"
     merged_bam = directory + "/merged.bam"
     sorted_bam = directory + "/merged_sorted.bam"
     subprocess.call("cat %s >> %s" % (outfile_perfect, bwa_out), shell=True)
-    subprocess.call(["samtools", "view", "-@", "40", bwa_out, "-o", merged_bam])
-    subprocess.call(["samtools", "sort", "-@", "20", "-m", "2G", merged_bam, ">", sorted_bam])
+    subprocess.call("samtools view -b -@ 40 %s -o %s" % (bwa_out, merged_bam), shell=True)
+    
+    with open(sorted_bam, "w+") as sorted:
+        sorted.write(subprocess.check_output(["samtools", "sort", "-@," "30", "-m", "2G," str(merged_bam)])
     subprocess.call(["samtools", "index", sorted_bam])
     print("Location of output file: \n" + str(path.abspath(sorted_bam)))
