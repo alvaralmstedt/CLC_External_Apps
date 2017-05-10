@@ -66,6 +66,6 @@ if __name__ == "__main__":
     subprocess.call("samtools view -b -@ 40 %s -o %s" % (bwa_out, merged_bam), shell=True)
     
     with open(sorted_bam, "w+") as sorted:
-        sorted.write(subprocess.check_output(["samtools", "sort", "-@," "30", "-m", "2G," str(merged_bam)])
+        sorted.write(subprocess.check_output(["samtools", "sort", "-@," "30", "-m", "2G,", str(merged_bam)]))
     subprocess.call(["samtools", "index", sorted_bam])
     print("Location of output file: \n" + str(path.abspath(sorted_bam)))
