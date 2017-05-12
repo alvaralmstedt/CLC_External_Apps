@@ -51,26 +51,48 @@ if __name__ == "__main__":
         sam_split(intermediary, outfile_perfect, outfile_secondary)
     elif ".sam" in infile:
         sam_split(infile, outfile_perfect, outfile_secondary)
-
     #headers = str(subprocess.call("tr '\t' '\n' < %s | grep RG: | sort | uniq" % outfile_secondary, shell=True, stdout=subprocess.PIPE))
     #with open(outfile_secondary + "tmp", "w+") as sec_tmp:
     #    sec_tmp.write(headers)
     #    sec_tmp.write(outfile_secondary)
     #    subprocess.call("mv %s %s" % (sec_tmp, outfile_secondary))
     secondary_tmp = outfile_secondary + "_temp"
-    subprocess.call("%s && samtools view -ht %s %s > %s" % (samtools_module, fasta_index, outfile_secondary, secondary_tmp), shell=True)
-    subprocess.call(["mv", secondary_tmp, outfile_secondary])
-    subprocess.call("%s && samtools fastq %s > %s/reads_interleaved.fastq" % (samtools_module, outfile_secondary, directory), shell=True)
-    subprocess.call("%s && bwa mem %s -p %s/reads_interleaved.fastq -t 40 > %s/bwa_out.sam" % (bwa_module ,bwa_index, directory, directory))
     
+    #
+    subprocess.call("%s && samtools view -ht %s %s > %s" % (samtools_module, fasta_index, outfile_secondary, secondary_tmp), shell=True)
+    
+    #Rename tempfile to original name
+    subprocess.call(["mv", secondary_tmp, outfile_secondary])
+    
+    #Convert to fastq
+    subprocess.call("%s && samtools fastq %s > %s/reads_interleaved.fastq" % (samtools_module, outfile_secondary, directory), shell=True)
+    
+    #Run bwa
+    subprocess.call("%s && bwa mem %s -p %s/reads_interleaved.fastq -t 40 > %s/bwa_out.sam" % (bwa_module ,bwa_index, directory, directory), shell=True)
+    
+    #Variable assignment
     bwa_out = directory + "/bwa_out.sam"
     merged_bam = directory + "/merged.bam"
     sorted_bam = directory + "/merged_sorted.bam"
-    
+    original_headers = directory + "/original_headers.sam"
+
+    #Merge perfect mapped into the bwa output
     subprocess.call("cat %s >> %s" % (outfile_perfect, bwa_out), shell=True)
-    subprocess.call("%s && samtools view -b -@ 40 %s -o %s" % (samtools_module, bwa_out, merged_bam), shell=True)
     
+    #Convert the merged sam file into bam
+    subprocess.call("%s && samtools view -b -@ 40 %s -o %s" % (samtools_module, bwa_out, merged_bam), shell=True)
+    # ---We are here---
+
+    #Extract the header from the original bam file
+    subprocess.call("%s && samtools view -H %s > %s", % (samtools_module, merged_bam, original_headers) shell=True)
+
+    #Reheader the merged bam file
+    subprocess.call("%s && samtools reheader -i %s %s" % (samtools_module, original_headers, merged_bam), shell=True)
+    
+    #Sort reheadered bam file
     with open(sorted_bam, "w+") as sorted:
-        sorted.write(subprocess.check_output(["samtools", "sort", "-@," "30", "-m", "2G,", str(merged_bam)]))
+        subprocess.check_output(["/apps/bio/apps/samtools/1.3.1/samtools", "sort", "-@", "30", "-m", "2G", merged_bam], stdout=sorted)
     subprocess.call(["samtools", "index", sorted_bam])
+    
+    #Give path to result
     print("Location of output file: \n" + str(path.abspath(sorted_bam)))
