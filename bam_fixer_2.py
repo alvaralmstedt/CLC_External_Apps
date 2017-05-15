@@ -9,6 +9,8 @@ This script will take bam or sam files from CLC and try to convert them to a for
 third part software that wants more bwa-like bam/sam files (such as manta for example). Work In Progress.
 """
 
+#Function splits input into perfectly mapped reads with NH:1 and QMAP > 3 and secondary mapped
+#with NH:>1 and QMAP < 3
 def sam_split(samfile_in, out_perfect, out_secondary):
     with open(samfile_in, "r") as sam:
         with open(out_perfect, "w+") as perfect:
@@ -17,7 +19,7 @@ def sam_split(samfile_in, out_perfect, out_secondary):
                     old_line = line.split("\t")
                     #new_line = old_line
                     NH_field = old_line[12].split(":")[-1].rstrip()
-                    if int(old_line[4]) <= 3 and int(NH_field) > 1:
+                    if int(old_line[4]) <= 3 and int(NH_field) > 1 or int(old_line[1]) % 2 == 0:
                         secondary.write(line)
                         #new_line[1] = str(int(old_line[4]) + 256)
                     elif not line.startswith("@"):
@@ -30,6 +32,7 @@ def sam_split(samfile_in, out_perfect, out_secondary):
                     #yield str(new_line)
 
 if __name__ == "__main__":
+    #
     infile = argv[1]
     outfile_perfect = argv[2]
     outfile_secondary = argv[3]
@@ -42,15 +45,20 @@ if __name__ == "__main__":
     
     #subprocess.call("module load samtools/1.3.1", shell=True)
     #subprocess.call("module load bwa/0.7.5a", shell=True)
-
+    
+    #Determine if the inut is bam or sam
     if ".bam" in infile:
         intermediary = infile.replace(".bam", ".sam")
         print(str(infile))
         print(str(intermediary))
-        subprocess.call("samtools view %s -o %s -@ 40" % (infile, intermediary), shell=True)
+        subprocess.call("{} && samtools sort {} -n -@ 40 -m 2G | samtools view - -o {} -@ 40".format(samtools_module, infile, intermediary), shell=True)
         sam_split(intermediary, outfile_perfect, outfile_secondary)
+        subprocess.call(["rm", intermediary])
     elif ".sam" in infile:
-        sam_split(infile, outfile_perfect, outfile_secondary)
+        temp = infile.replace(".sam", "_tmp.sam")
+        subprocess.call("{} && samtools view {} -@ 40 | samtools sort - -@ 40 -m 2G -n | samtools view - -o {} -@ 40".format(samtools_module, infile, temp), shell=True)
+        sam_split(temp, outfile_perfect, outfile_secondary)
+        subprocess.call(["rm", temp])
     #headers = str(subprocess.call("tr '\t' '\n' < %s | grep RG: | sort | uniq" % outfile_secondary, shell=True, stdout=subprocess.PIPE))
     #with open(outfile_secondary + "tmp", "w+") as sec_tmp:
     #    sec_tmp.write(headers)
@@ -58,7 +66,7 @@ if __name__ == "__main__":
     #    subprocess.call("mv %s %s" % (sec_tmp, outfile_secondary))
     secondary_tmp = outfile_secondary + "_temp"
     
-    #
+    #Reheader the secondary mapped sam file
     subprocess.call("%s && samtools view -ht %s %s > %s" % (samtools_module, fasta_index, outfile_secondary, secondary_tmp), shell=True)
     
     #Rename tempfile to original name
@@ -84,7 +92,7 @@ if __name__ == "__main__":
     # ---We are here---
 
     #Extract the header from the original bam file
-    subprocess.call("%s && samtools view -H %s > %s", % (samtools_module, merged_bam, original_headers) shell=True)
+    subprocess.call("%s && samtools view -H %s > %s" % (samtools_module, merged_bam, original_headers), shell=True)
 
     #Reheader the merged bam file
     subprocess.call("%s && samtools reheader -i %s %s" % (samtools_module, original_headers, merged_bam), shell=True)
