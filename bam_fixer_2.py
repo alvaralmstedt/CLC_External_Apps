@@ -31,6 +31,9 @@ def sam_split(samfile_in, out_perfect, out_secondary):
                         except TypeError as te:
                             it1 += 1
                             print("type error number {}".format(str(it1)))
+                            print("column 4: ", old_line[4])
+                            print("NH_field: ", NH_field)
+                            print("Column 1: ", old_line[1])
                             print(str(te))
                             continue
                         except ValueError as ve:
@@ -70,17 +73,21 @@ if __name__ == "__main__":
         print(str(intermediary))
         subprocess.call("{} && samtools sort {} -n -@ 112 -m 2G | samtools view - -o {} -@ 112".format(samtools_module, infile, intermediary), shell=True)
         sam_split(intermediary, outfile_perfect, outfile_secondary)
-        subprocess.call(["rm", intermediary])
+        #subprocess.call(["rm", intermediary])
     elif ".sam" in infile:
         temp = infile.replace(".sam", "_tmp.sam")
         subprocess.call("{} && samtools view {} -@ 112 | samtools sort - -@ 40 -m 2G -n | samtools view - -o {} -@ 112".format(samtools_module, infile, temp), shell=True)
         sam_split(temp, outfile_perfect, outfile_secondary)
-        subprocess.call(["rm", temp])
+        #subprocess.call(["rm", temp])
+    
+    #old and unused
     #headers = str(subprocess.call("tr '\t' '\n' < %s | grep RG: | sort | uniq" % outfile_secondary, shell=True, stdout=subprocess.PIPE))
     #with open(outfile_secondary + "tmp", "w+") as sec_tmp:
     #    sec_tmp.write(headers)
     #    sec_tmp.write(outfile_secondary)
     #    subprocess.call("mv %s %s" % (sec_tmp, outfile_secondary))
+    
+    
     secondary_tmp = outfile_secondary + "_temp"
     
     #Reheader the secondary mapped sam file
