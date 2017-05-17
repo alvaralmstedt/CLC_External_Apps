@@ -21,8 +21,8 @@ def sam_split(samfile_in, out_perfect, out_secondary):
                     old_line = line.split("\t")
                     #new_line = old_line
                     if not line.startswith("@"):    
+                        NH_field = old_line[-1].split(":")[-1].rstrip()
                         try:
-                            NH_field = old_line[-1].split(":")[-1].rstrip()
                             if int(old_line[4]) <= 3 and int(NH_field) > 1 or int(bin(old_line[1])[-2]) == 1:
                                 secondary.write(line)
                                 #new_line[1] = str(int(old_line[4]) + 256)
