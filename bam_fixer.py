@@ -12,14 +12,17 @@ import os
 def sam_logic(samfile):
     with open(samfile) as sam:
         for line in sam:
-            old_line = line.split("\t")
-            new_line = old_line
-            NH_field = old_line[12].split(":")[-1].rstrip()
-            if int(old_line[4]) <= 3 and int(NH_field) > 1 :
-                new_line[1] = str(int(old_line[4]) + 256)
-            new_line = "\t".join(new_line)
-            print new_line
-            yield str(new_line)
+            if not line.startswith("@")
+                old_line = line.split("\t")
+                new_line = old_line
+                NH_field = old_line[12].split(":")[-1].rstrip()
+                if int(old_line[4]) <= 3 and int(NH_field) > 1 :
+                    new_line[1] = str(int(old_line[4]) + 256)
+                new_line = "\t".join(new_line)
+                print new_line
+                yield str(new_line)
+            else:
+                continue
 
 def write_sam(input_line, output_sam):
     with open(output_sam, "a+") as outfile:
