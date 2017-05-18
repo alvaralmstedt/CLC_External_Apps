@@ -95,7 +95,6 @@ if __name__ == "__main__":
     #    sec_tmp.write(outfile_secondary)
     #    subprocess.call("mv %s %s" % (sec_tmp, outfile_secondary))
 
-
     secondary_tmp = outfile_secondary + "_temp"
 
     # Reheader the secondary mapped sam file
@@ -113,7 +112,7 @@ if __name__ == "__main__":
 
     # Run bwa
     subprocess.call("%s && bwa mem %s -p %s/reads_interleaved.fastq -t 112 > %s/bwa_out.sam" % (
-    bwa_module, bwa_index, directory, directory), shell=True)
+                    bwa_module, bwa_index, directory, directory), shell=True)
 
     # Variable assignment
     bwa_out = directory + "/bwa_out.sam"
@@ -135,9 +134,8 @@ if __name__ == "__main__":
     subprocess.call("%s && samtools reheader -i %s %s" % (samtools_module, original_headers, merged_bam), shell=True)
 
     # Sort reheadered bam file
-    with open(sorted_bam, "w+") as sorted:
-        subprocess.call(["/apps/bio/apps/samtools/1.3.1/samtools", "sort", "-@", "112", "-m", "2G", merged_bam],
-                                stdout=sorted)
+    # with open(sorted_bam, "wb") as sorted:
+    subprocess.call("/apps/bio/apps/samtools/1.3.1/samtools sort -@ 112 -m 2G %s > %s" % (merged_bam, sorted_bam), shell=True)
     subprocess.call(["/apps/bio/apps/samtools/1.3.1/samtools", "index", sorted_bam])
 
     # Give path to result
