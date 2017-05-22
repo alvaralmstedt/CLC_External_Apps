@@ -89,7 +89,7 @@ if __name__ == "__main__":
         print(str(intermediary))
         try:
             subprocess.check_call(
-                "{} && samtools sort {} -n -@ 112 -m 2G | samtools view - -o {} -@ 112".format(samtools_module, infile,
+                "{} && samtools sort {} -n -@ 112 -m 2G | samtools view - -o {} -@ 112 -h".format(samtools_module, infile,
                                                                                                intermediary),
                 shell=True)
         except subprocess.CalledProcessError:
@@ -107,7 +107,7 @@ if __name__ == "__main__":
         try:
             #subprocess.call("", shell=True)
             subprocess.check_call(
-                "{} && samtools view {} -@ 112 -h | samtools sort - -@ 40 -m 2G -n | samtools view - -o {} -@ 112".format(
+                "{} && samtools view {} -@ 112 | samtools sort - -@ 40 -m 2G -n | samtools view - -o {} -@ 112 -h".format(
                     samtools_module, infile, temp), shell=True)
         except subprocess.CalledProcessError:
             logging.warning("CALLEDPROCESERROR in initial sort")
@@ -158,28 +158,26 @@ if __name__ == "__main__":
     logging.info("Perfect SAM merged into remapped secondary SAM")
 
     # Convert the merged sam file into bam
-    print("1")
     subprocess.call("%s && samtools view -b -@ 112 %s -o %s" % (samtools_module, bwa_out, merged_bam), shell=True)
     logging.info("Merged SAM converted to BAM")
-    # ---We are here---
-    print("2")
     # Extract the header from the original bam file
     subprocess.call("%s && samtools view -H %s > %s" % (samtools_module, merged_bam, original_headers), shell=True)
     logging.info("Headers extracted")
     print("3")
     # Reheader the merged bam file
-    subprocess.call("%s && samtools reheader -i %s %s" % (samtools_module, original_headers, merged_bam), shell=True)
+    subprocess.call("%s && samtools reheader -i %s %s > /dev/null" % (samtools_module, original_headers, merged_bam), shell=True)
+    subprocess.call("")
     logging.info("BAM file reheadersed")
     print("4")
+
     # Sort reheadered bam file
     # with open(sorted_bam, "wb") as sorted:
     subprocess.call("/apps/bio/apps/samtools/1.3.1/samtools sort -@ 112 -m 2G %s > %s" % (merged_bam, sorted_bam),
                     shell=True)
-    print("5")
     logging.info("Final BAM sorted")
     subprocess.call(["/apps/bio/apps/samtools/1.3.1/samtools", "index", sorted_bam])
     logging.info("Final BAM indexed")
-    print("6")
+
     # Give path to result
     print("Location of output file: \n" + str(path.abspath(sorted_bam)))
     logging.info("Everything is Completed.")
