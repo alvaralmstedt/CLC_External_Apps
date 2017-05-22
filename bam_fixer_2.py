@@ -3,6 +3,7 @@
 from sys import argv
 import subprocess
 from os import path
+import logging
 
 """
 This script will take bam or sam files from CLC and try to convert them to a format that is more compatible with
@@ -34,7 +35,7 @@ def sam_split(samfile_in, out_perfect, out_secondary):
                                 perfect.write(line)
                         except TypeError as te:
                             it1 += 1
-                            print("type error number {}".format(str(it1)))
+                            logging.warning("type error number {}".format(str(it1)))
                             print("column 4: ", old_line[4])
                             print("NH_field: ", NH_field)
                             print("Column 1: ", old_line[1])
@@ -42,8 +43,11 @@ def sam_split(samfile_in, out_perfect, out_secondary):
                             continue
                         except ValueError as ve:
                             it2 += 1
-                            print("value error number {}".format(str(it2)))
+                            logging.warning("value error number {}".format(str(it2)))
                             print(str(ve))
+                            if bin(int(old_line[1]))[-2] == "b":
+                                logging.info("This read has flag 0 (mapped, unpaired). Sending it to perfect.")
+                                perfect.write(line)
                             continue
 
                             # print("Column 4 (MAPQ):" + old_line[4])
@@ -57,7 +61,8 @@ def sam_split(samfile_in, out_perfect, out_secondary):
 
 
 if __name__ == "__main__":
-    #
+    logging.basicConfig(level=logging.DEBUG, filename="logfile", filemode="a+",
+                        format="%(asctime)-15s %(levelname)-8s %(message)s")
     infile = argv[1]
     outfile_perfect = argv[2]
     outfile_secondary = argv[3]
@@ -67,26 +72,32 @@ if __name__ == "__main__":
 
     samtools_module = "module load samtools/1.3.1"
     bwa_module = "module load bwa/0.7.5a"
-
+    logging.info("initial variables set")
     # subprocess.call("module load samtools/1.3.1", shell=True)
     # subprocess.call("module load bwa/0.7.5a", shell=True)
 
     # Determine if the inut is bam or sam
     if ".bam" in infile:
+        logging.info("Input file was: BAM")
         intermediary = infile.replace(".bam", ".sam")
         print(str(infile))
         print(str(intermediary))
         subprocess.call(
             "{} && samtools sort {} -n -@ 112 -m 2G | samtools view - -o {} -@ 112".format(samtools_module, infile,
                                                                                            intermediary), shell=True)
+        logging.info("Initial conversion of BAM to SAM (name sorted) completed")
         sam_split(intermediary, outfile_perfect, outfile_secondary)
         # subprocess.call(["rm", intermediary])
+        logging.info("Splitting of the SAM-file completed")
     elif ".sam" in infile:
+        logging.info("input file was: SAM")
         temp = infile.replace(".sam", "_tmp.sam")
         subprocess.call(
             "{} && samtools view {} -@ 112 | samtools sort - -@ 40 -m 2G -n | samtools view - -o {} -@ 112".format(
                 samtools_module, infile, temp), shell=True)
+        logging.info("Initial name sorting completed")
         sam_split(temp, outfile_perfect, outfile_secondary)
+        logging.info("Splitting of the SAM-file completed")
         # subprocess.call(["rm", temp])
 
     # old and unused
@@ -102,42 +113,51 @@ if __name__ == "__main__":
     subprocess.call(
         "%s && samtools view -ht %s %s > %s" % (samtools_module, fasta_index, outfile_secondary, secondary_tmp),
         shell=True)
+    logging.info("Temporary secondary SAM-file re-headered")
 
     # Rename tempfile to original name
     subprocess.call(["mv", secondary_tmp, outfile_secondary])
+    logging.info("SAM-file overwritten by temp file")
 
     # Convert to fastq
     subprocess.call(
         "%s && samtools fastq %s > %s/reads_interleaved.fastq" % (samtools_module, outfile_secondary, directory),
         shell=True)
-
+    logging.info("Converted secondary to fastq")
     # Run bwa
     subprocess.call("%s && bwa mem %s -p %s/reads_interleaved.fastq -t 112 > %s/bwa_out.sam" % (
                     bwa_module, bwa_index, directory, directory), shell=True)
-
+    logging.info("Secondary reads re-mapped")
     # Variable assignment
     bwa_out = directory + "/bwa_out.sam"
     merged_bam = directory + "/merged.bam"
     sorted_bam = directory + "/merged_sorted.bam"
     original_headers = directory + "/original_headers.sam"
+    logging.info("Merger-related variables set")
 
     # Merge perfect mapped into the bwa output
     subprocess.call("cat %s >> %s" % (outfile_perfect, bwa_out), shell=True)
-
+    logging.info("Perfect SAM merged into remapped secondary SAM")
     # Convert the merged sam file into bam
     subprocess.call("%s && samtools view -b -@ 112 %s -o %s" % (samtools_module, bwa_out, merged_bam), shell=True)
+    logging.info("Merged SAM converted to BAM")
     # ---We are here---
 
     # Extract the header from the original bam file
     subprocess.call("%s && samtools view -H %s > %s" % (samtools_module, merged_bam, original_headers), shell=True)
+    logging.info("Headers extracted")
 
     # Reheader the merged bam file
     subprocess.call("%s && samtools reheader -i %s %s" % (samtools_module, original_headers, merged_bam), shell=True)
+    logging.info("BAM file reheadersed")
 
     # Sort reheadered bam file
     # with open(sorted_bam, "wb") as sorted:
     subprocess.call("/apps/bio/apps/samtools/1.3.1/samtools sort -@ 112 -m 2G %s > %s" % (merged_bam, sorted_bam), shell=True)
+    logging.info("Final BAM sorted")
     subprocess.call(["/apps/bio/apps/samtools/1.3.1/samtools", "index", sorted_bam])
+    logging.info("Final BAM indexed")
 
     # Give path to result
     print("Location of output file: \n" + str(path.abspath(sorted_bam)))
+    logging.info("Everything is Completed.")
