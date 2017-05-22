@@ -154,31 +154,32 @@ if __name__ == "__main__":
     logging.info("Merger-related variables set")
 
     # Merge perfect mapped into the bwa output
-    print("before cat")
     subprocess.call("cat %s >> %s" % (outfile_perfect, bwa_out), shell=True)
     logging.info("Perfect SAM merged into remapped secondary SAM")
-    print("after cat")
+
     # Convert the merged sam file into bam
+    print("1")
     subprocess.call("%s && samtools view -b -@ 112 %s -o %s" % (samtools_module, bwa_out, merged_bam), shell=True)
     logging.info("Merged SAM converted to BAM")
     # ---We are here---
-
+    print("2")
     # Extract the header from the original bam file
     subprocess.call("%s && samtools view -H %s > %s" % (samtools_module, merged_bam, original_headers), shell=True)
     logging.info("Headers extracted")
-
+    print("3")
     # Reheader the merged bam file
     subprocess.call("%s && samtools reheader -i %s %s" % (samtools_module, original_headers, merged_bam), shell=True)
     logging.info("BAM file reheadersed")
-
+    print("4")
     # Sort reheadered bam file
     # with open(sorted_bam, "wb") as sorted:
     subprocess.call("/apps/bio/apps/samtools/1.3.1/samtools sort -@ 112 -m 2G %s > %s" % (merged_bam, sorted_bam),
                     shell=True)
+    print("5")
     logging.info("Final BAM sorted")
     subprocess.call(["/apps/bio/apps/samtools/1.3.1/samtools", "index", sorted_bam])
     logging.info("Final BAM indexed")
-
+    print("6")
     # Give path to result
     print("Location of output file: \n" + str(path.abspath(sorted_bam)))
     logging.info("Everything is Completed.")
