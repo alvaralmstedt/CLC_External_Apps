@@ -22,6 +22,8 @@ def sam_split(samfile_in, out_perfect, out_secondary):
             with open(out_secondary, "w+") as secondary:
                 it1 = 0
                 it2 = 0
+                perfs = 0
+                secs = 0
                 for line in sam:
                     old_line = line.split("\t")
                     # new_line = old_line
@@ -30,10 +32,12 @@ def sam_split(samfile_in, out_perfect, out_secondary):
                         try:
                             if int(old_line[4]) <= 3 and int(NH_field) > 1 or int(bin(int(old_line[1]))[-2]) == 0:
                                 secondary.write(line)
+                                secs += 1
                                 # new_line[1] = str(int(old_line[4]) + 256)
-                          
+
                             else:
                                 perfect.write(line)
+                                perfs += 1
                         except TypeError as te:
                             it1 += 1
                             logging.warning("type error number {}".format(str(it1)))
@@ -50,15 +54,15 @@ def sam_split(samfile_in, out_perfect, out_secondary):
                                 logging.info("This read has flag 0 (mapped, unpaired). Sending it to perfect.")
                                 perfect.write(line)
                             continue
-
-                            # print("Column 4 (MAPQ):" + old_line[4])
-                            # print("NH" + NH_field)
-                            # print(bin())
-                            # print("This line will not be used:")
-                            # print(line)
-                            # new_line = "\t".join(new_line)
-                            # print new_line
-                            # yield str(new_line)
+                logging.info("{} preftect. {} secondary. {} TypeErrors. {} ValueErrors".format(perfs, secs, it1, it2))
+                # print("Column 4 (MAPQ):" + old_line[4])
+                # print("NH" + NH_field)
+                # print(bin())
+                # print("This line will not be used:")
+                # print(line)
+                # new_line = "\t".join(new_line)
+                # print new_line
+                # yield str(new_line)
 
 
 if __name__ == "__main__":
@@ -86,10 +90,12 @@ if __name__ == "__main__":
         try:
             subprocess.check_call(
                 "{} && samtools sort {} -n -@ 112 -m 2G | samtools view - -o {} -@ 112".format(samtools_module, infile,
-                                                                                               intermediary), shell=True)
+                                                                                               intermediary),
+                shell=True)
         except subprocess.CalledProcessError:
             logging.warning("CALLEDPROCESSERROR in initial sort")
         except OSError:
+            print("OSERROR")
             logging.warning("OSERROR in initial sort")
         logging.info("Initial conversion of BAM to SAM (name sorted) completed")
         sam_split(intermediary, outfile_perfect, outfile_secondary)
@@ -99,13 +105,14 @@ if __name__ == "__main__":
         logging.info("input file was: SAM")
         temp = infile.replace(".sam", "_tmp.sam")
         try:
+            subprocess.call("", shell=True)
             subprocess.check_call(
-                "{} && samtools view {} -@ 112 | samtools sort - -@ 40 -m 2G -n | samtools view - -o {} -@ 112".format(
+                "{} && samtools view {} -@ 112 -h | samtools sort - -@ 40 -m 2G -n | samtools view - -o {} -@ 112".format(
                     samtools_module, infile, temp), shell=True)
         except subprocess.CalledProcessError:
-                logging.warning("CALLEDPROCESERROR in initial sort")
+            logging.warning("CALLEDPROCESERROR in initial sort")
         except OSError:
-                logging.warning("OSERROR in initial sort")
+            logging.warning("OSERROR in initial sort")
         logging.info("Initial name sorting completed")
         sam_split(temp, outfile_perfect, outfile_secondary)
         logging.info("Splitting of the SAM-file completed")
@@ -137,7 +144,7 @@ if __name__ == "__main__":
     logging.info("Converted secondary to fastq")
     # Run bwa
     subprocess.call("%s && bwa mem %s -p %s/reads_interleaved.fastq -t 112 > %s/bwa_out.sam" % (
-                    bwa_module, bwa_index, directory, directory), shell=True)
+        bwa_module, bwa_index, directory, directory), shell=True)
     logging.info("Secondary reads re-mapped")
     # Variable assignment
     bwa_out = directory + "/bwa_out.sam"
@@ -164,7 +171,8 @@ if __name__ == "__main__":
 
     # Sort reheadered bam file
     # with open(sorted_bam, "wb") as sorted:
-    subprocess.call("/apps/bio/apps/samtools/1.3.1/samtools sort -@ 112 -m 2G %s > %s" % (merged_bam, sorted_bam), shell=True)
+    subprocess.call("/apps/bio/apps/samtools/1.3.1/samtools sort -@ 112 -m 2G %s > %s" % (merged_bam, sorted_bam),
+                    shell=True)
     logging.info("Final BAM sorted")
     subprocess.call(["/apps/bio/apps/samtools/1.3.1/samtools", "index", sorted_bam])
     logging.info("Final BAM indexed")
