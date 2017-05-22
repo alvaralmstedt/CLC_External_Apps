@@ -107,8 +107,8 @@ if __name__ == "__main__":
         try:
             subprocess.call("", shell=True)
             subprocess.check_call(
-                "{} && samtools view {} -@ 112 -t {} | samtools sort - -@ 40 -m 2G -n | samtools view - -o {} -@ 112".format(
-                    samtools_module, infile, fasta_index, temp), shell=True)
+                "{} && samtools view {} -@ 112 -T {} | samtools sort - -@ 40 -m 2G -n | samtools view - -o {} -@ 112".format(
+                    samtools_module, infile, bwa_index, temp), shell=True)
         except subprocess.CalledProcessError:
             logging.warning("CALLEDPROCESERROR in initial sort")
         except OSError:
