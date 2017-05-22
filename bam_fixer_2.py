@@ -105,10 +105,10 @@ if __name__ == "__main__":
         logging.info("input file was: SAM")
         temp = infile.replace(".sam", "_tmp.sam")
         try:
-            subprocess.call("", shell=True)
+            #subprocess.call("", shell=True)
             subprocess.check_call(
-                "{} && samtools view {} -@ 112 -T {} | samtools sort - -@ 40 -m 2G -n | samtools view - -o {} -@ 112".format(
-                    samtools_module, infile, bwa_index, temp), shell=True)
+                "{} && samtools view {} -@ 112 -h | samtools sort - -@ 40 -m 2G -n | samtools view - -o {} -@ 112".format(
+                    samtools_module, infile, temp), shell=True)
         except subprocess.CalledProcessError:
             logging.warning("CALLEDPROCESERROR in initial sort")
         except OSError:
@@ -154,8 +154,10 @@ if __name__ == "__main__":
     logging.info("Merger-related variables set")
 
     # Merge perfect mapped into the bwa output
+    print("before cat")
     subprocess.call("cat %s >> %s" % (outfile_perfect, bwa_out), shell=True)
     logging.info("Perfect SAM merged into remapped secondary SAM")
+    print("after cat")
     # Convert the merged sam file into bam
     subprocess.call("%s && samtools view -b -@ 112 %s -o %s" % (samtools_module, bwa_out, merged_bam), shell=True)
     logging.info("Merged SAM converted to BAM")
