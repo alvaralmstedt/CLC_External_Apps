@@ -24,13 +24,14 @@ def sam_split(samfile_in, out_perfect, out_secondary):
                 it2 = 0
                 perfs = 0
                 secs = 0
+                zeroes = 0
                 for line in sam:
                     old_line = line.split("\t")
                     # new_line = old_line
                     if not line.startswith("@"):
                         NH_field = old_line[-2].split(":")[-1]
                         try:
-                            if int(old_line[4]) <= 3 and int(NH_field) > 1 or int(bin(int(old_line[1]))[-2]) == 0:
+                            if int(old_line[4]) <= 3 and int(NH_field) > 1 or bin(int(old_line[1]))[-2] == '0':
                                 secondary.write(line)
                                 secs += 1
                                 # new_line[1] = str(int(old_line[4]) + 256)
@@ -48,13 +49,18 @@ def sam_split(samfile_in, out_perfect, out_secondary):
                             continue
                         except ValueError as ve:
                             it2 += 1
-                            logging.warning("value error number {}".format(str(it2)))
+                            #logging.warning("value error number {}".format(str(it2)))
                             print(str(ve))
                             if bin(int(old_line[1]))[-2] == "b":
-                                logging.info("This read has flag 0 (mapped, unpaired). Sending it to perfect.")
+                                #logging.info("This read has flag 0 (mapped, unpaired). Sending it to perfect.")
                                 perfect.write(line)
+                                zeroes += 1
+                                perfs += 1
                             continue
-                logging.info("{} preftect. {} secondary. {} TypeErrors. {} ValueErrors".format(perfs, secs, it1, it2))
+                logging.info("{} perfect. {} secondary. {} zero FLAG. {} TypeErrors. {} ValueErrors".format(perfs,
+                                                                                                            secs,
+                                                                                                            zeroes,
+                                                                                                            it1, it2))
                 # print("Column 4 (MAPQ):" + old_line[4])
                 # print("NH" + NH_field)
                 # print(bin())
@@ -66,7 +72,7 @@ def sam_split(samfile_in, out_perfect, out_secondary):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG, filename="bam_fixer_2.log", filemode="a+",
+    logging.basicConfig(level=logging.DEBUG, filename="bam_fixer_2.log", filemode="w",
                         format="%(asctime)-15s %(levelname)-8s %(message)s")
     infile = argv[1]
     outfile_perfect = argv[2]
@@ -89,7 +95,7 @@ if __name__ == "__main__":
         print(str(intermediary))
         try:
             subprocess.check_call(
-                "{} && samtools sort {} -n -@ 112 -m 2G | samtools view - -o {} -@ 112".format(samtools_module, infile,
+                "{} && samtools sort {} -n -@ 112 -m 2G | samtools view - -o {} -@ 112 -h".format(samtools_module, infile,
                                                                                                intermediary),
                 shell=True)
         except subprocess.CalledProcessError:
@@ -107,8 +113,8 @@ if __name__ == "__main__":
         try:
             #subprocess.call("", shell=True)
             subprocess.check_call(
-                "{} && samtools view {} -@ 112 -h | samtools sort - -@ 40 -m 2G -n | samtools view - -o {} -@ 112".format(
-                    samtools_module, infile, temp), shell=True)
+                "{} && samtools view {} -@ 112 -ht {} | samtools sort - -@ 40 -m 2G -n | samtools view - -o {} -@ 112 -h".format(
+                    samtools_module, infile, fasta_index, temp), shell=True)
         except subprocess.CalledProcessError:
             logging.warning("CALLEDPROCESERROR in initial sort")
         except OSError:
@@ -158,28 +164,25 @@ if __name__ == "__main__":
     logging.info("Perfect SAM merged into remapped secondary SAM")
 
     # Convert the merged sam file into bam
-    print("1")
     subprocess.call("%s && samtools view -b -@ 112 %s -o %s" % (samtools_module, bwa_out, merged_bam), shell=True)
     logging.info("Merged SAM converted to BAM")
-    # ---We are here---
-    print("2")
     # Extract the header from the original bam file
     subprocess.call("%s && samtools view -H %s > %s" % (samtools_module, merged_bam, original_headers), shell=True)
     logging.info("Headers extracted")
     print("3")
     # Reheader the merged bam file
     subprocess.call("%s && samtools reheader -i %s %s > /dev/null" % (samtools_module, original_headers, merged_bam), shell=True)
-    logging.info("BAM file reheadersed")
+    logging.info("BAM file reheadered")
     print("4")
+
     # Sort reheadered bam file
     # with open(sorted_bam, "wb") as sorted:
     subprocess.call("/apps/bio/apps/samtools/1.3.1/samtools sort -@ 112 -m 2G %s > %s" % (merged_bam, sorted_bam),
                     shell=True)
-    print("5")
     logging.info("Final BAM sorted")
     subprocess.call(["/apps/bio/apps/samtools/1.3.1/samtools", "index", sorted_bam])
     logging.info("Final BAM indexed")
-    print("6")
+
     # Give path to result
     print("Location of output file: \n" + str(path.abspath(sorted_bam)))
     logging.info("Everything is Completed.")
