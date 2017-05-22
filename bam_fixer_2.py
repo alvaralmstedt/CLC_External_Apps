@@ -4,6 +4,7 @@ from sys import argv
 import subprocess
 from os import path
 import logging
+import datetime
 
 """
 This script will take bam or sam files from CLC and try to convert them to a format that is more compatible with
@@ -61,7 +62,7 @@ def sam_split(samfile_in, out_perfect, out_secondary):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG, filename="logfile", filemode="a+",
+    logging.basicConfig(level=logging.DEBUG, filename="bam_fixer_2.log", filemode="a+",
                         format="%(asctime)-15s %(levelname)-8s %(message)s")
     infile = argv[1]
     outfile_perfect = argv[2]
@@ -82,9 +83,14 @@ if __name__ == "__main__":
         intermediary = infile.replace(".bam", ".sam")
         print(str(infile))
         print(str(intermediary))
-        subprocess.call(
-            "{} && samtools sort {} -n -@ 112 -m 2G | samtools view - -o {} -@ 112".format(samtools_module, infile,
-                                                                                           intermediary), shell=True)
+        try:
+            subprocess.check_call(
+                "{} && samtools sort {} -n -@ 112 -m 2G | samtools view - -o {} -@ 112".format(samtools_module, infile,
+                                                                                               intermediary), shell=True)
+        except subprocess.CalledProcessError:
+            logging.warning("CALLEDPROCESSERROR in initial sort")
+        except OSError:
+            logging.warning("OSERROR in initial sort")
         logging.info("Initial conversion of BAM to SAM (name sorted) completed")
         sam_split(intermediary, outfile_perfect, outfile_secondary)
         # subprocess.call(["rm", intermediary])
@@ -92,9 +98,14 @@ if __name__ == "__main__":
     elif ".sam" in infile:
         logging.info("input file was: SAM")
         temp = infile.replace(".sam", "_tmp.sam")
-        subprocess.call(
-            "{} && samtools view {} -@ 112 | samtools sort - -@ 40 -m 2G -n | samtools view - -o {} -@ 112".format(
-                samtools_module, infile, temp), shell=True)
+        try:
+            subprocess.check_call(
+                "{} && samtools view {} -@ 112 | samtools sort - -@ 40 -m 2G -n | samtools view - -o {} -@ 112".format(
+                    samtools_module, infile, temp), shell=True)
+        except subprocess.CalledProcessError:
+                logging.warning("CALLEDPROCESERROR in initial sort")
+        except OSError:
+                logging.warning("OSERROR in initial sort")
         logging.info("Initial name sorting completed")
         sam_split(temp, outfile_perfect, outfile_secondary)
         logging.info("Splitting of the SAM-file completed")
