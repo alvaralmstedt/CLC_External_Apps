@@ -168,7 +168,7 @@ if __name__ == "__main__":
     logging.info("Headers extracted")
     print("3")
     # Reheader the merged bam file
-    subprocess.call("%s && samtools reheader -i %s %s" % (samtools_module, original_headers, merged_bam), shell=True)
+    subprocess.call("%s && samtools reheader -i %s %s > /dev/null" % (samtools_module, original_headers, merged_bam), shell=True)
     logging.info("BAM file reheadersed")
     print("4")
     # Sort reheadered bam file
