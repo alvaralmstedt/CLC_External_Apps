@@ -132,7 +132,7 @@ if __name__ == "__main__":
 
     # Get original headers
     original_headers = directory + "/original_headers.sam"
-    subprocess.call("{} && samtools view -H {} > {}".format(samtools_module, infile, original_headers))
+    subprocess.call("{} && samtools view -H {} > {}".format(samtools_module, infile, original_headers), shell=True)
     logging.info("Headers extracted from original input file: {} to : {}".format(infile, original_headers))
 
     secondary_tmp = outfile_secondary + "_temp"
