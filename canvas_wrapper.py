@@ -24,12 +24,14 @@ def igv_modification(user, infile):
         newfile = []
         for line in userfile.readlines()[:-2]:
         #    if "<Resource name=" in line:
-                newfile.append(line)
-        newfile.append('\t\t<Resource name="%s" path="http://medstore.sahlgrenska.gu.se:8008/data/%s/%s" />' % (bam, user, bam))
+            newfile.append(line)
+        newfile.append('\t\t<Resource name="%s" path="http://medstore.sahlgrenska.gu.se:8008/data/%s/%s" />' % (bam,
+                                                                                                                user,
+                                                                                                                bam))
         newfile.append("\t</Category>")
         newfile.append("</Global>")
-        for i in newfile:
-            userfile.write(i + "\n")
+        for j in newfile:
+            userfile.write(j + "\n")
 
 error_file = open("/tmp/canvaserror.log", 'w+')
 error_file.write(str(socket.gethostname()))
@@ -76,7 +78,8 @@ error_file.write("Bampath after looking in text: %s" % bam_path)
 call(["cp", str(bam_file), "-t", str(bam_path)])
 call(["cp", str(bam_file) + ".bai", "-t", str(bam_path)])
 call("cp -r /medstore/External_References/Canvas_CLC_HG19_Dataset /tmp/canvas_dir/", shell=True)
-call("cp -r /medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta* /tmp/canvas_dir/Canvas_CLC_HG19_Dataset", shell=True)
+call("cp -r /medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta* /tmp/canvas_dir/Canvas_CLC_HG19_Dataset",
+     shell=True)
 
 if not indexed:
     call("module load samtools/1.3.1", shell=True)
