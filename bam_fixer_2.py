@@ -98,7 +98,7 @@ if __name__ == "__main__":
         except OSError:
             print("OSERROR")
             logging.warning("OSERROR in initial sort")
-        logging.info("Initial conversion of BAM to SAM (name sorted) completed")
+        logging.info("Initial conversion of BAM to SAM (name sorted) completed. Now starting SAM-file splitting")
         sam_split(intermediary, outfile_perfect, outfile_secondary)
         # subprocess.call(["rm", intermediary])
         logging.info("Splitting of the SAM-file completed")
@@ -114,7 +114,7 @@ if __name__ == "__main__":
             logging.warning("CALLEDPROCESERROR in initial sort")
         except OSError:
             logging.warning("OSERROR in initial sort")
-        logging.info("Initial name sorting completed")
+        logging.info("Initial name sorting completed, starting SAM-file splitting")
         sam_split(temp, outfile_perfect, outfile_secondary)
         logging.info("Splitting of the SAM-file completed")
         # subprocess.call(["rm", temp])
