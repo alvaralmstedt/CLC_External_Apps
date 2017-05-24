@@ -21,18 +21,28 @@ igv_data_folder = "/medstore/IGV_Folders/igv/data/%s" % uname
 
 def igv_modification(user, infile):
     with open("/medstore/IGV_Folders/igv/users/%s_igv.xml" % user, "r+") as userfile:
+        lines_of_file = userfile.readlines()
         bam = os.path.basename(infile)
-        newfile = []
-        for line in userfile.readlines()[:-2]:
-            # if "<Resource name=" in line:
-            newfile.append(line.rstrip("\n"))
-        newfile.append('\t\t<Resource name="%s" path="http://medstore.sahlgrenska.gu.se:8008/data/%s/%s" />' % (bam,
-                                                                                                                user,
-                                                                                                                bam))
-        newfile.append("\t</Category>")
-        newfile.append("</Global>")
-        for j in newfile:
-            userfile.write(j)
+        lines_of_file.insert(-2,
+                             '\t\t<Resource name="%s" path="http://medstore.sahlgrenska.gu.se:8008/data/%s/%s" />\n' % (
+                                 bam, user, bam))
+        userfile.seek(0)
+        userfile.truncate()
+        userfile.writelines(lines_of_file)
+
+        # Old solution (not the best)
+        # bam = os.path.basename(infile)
+        # newfile = []
+        # for line in userfile.readlines()[:-2]:
+        #     # if "<Resource name=" in line:
+        #     newfile.append(line.rstrip("\n"))
+        # newfile.append('\t\t<Resource name="%s" path="http://medstore.sahlgrenska.gu.se:8008/data/%s/%s" />' % (bam,
+        #                                                                                                        user,
+        #                                                                                                        bam))
+        # newfile.append("\t</Category>")
+        # newfile.append("</Global>")
+        # for j in newfile:
+        #     userfile.write(j)
 
 
 error_file = open("/tmp/canvaserror.log", 'w+')
