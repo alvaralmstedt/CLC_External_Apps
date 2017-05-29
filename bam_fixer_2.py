@@ -48,10 +48,10 @@ def sam_split(samfile_in, out_perfect, out_secondary):
                             continue
                         except ValueError as ve:
                             it2 += 1
-                            #logging.warning("value error number {}".format(str(it2)))
+                            # logging.warning("value error number {}".format(str(it2)))
                             print(str(ve))
                             if bin(int(old_line[1]))[-2] == "b":
-                                #logging.info("This read has flag 0 (mapped, unpaired). Sending it to perfect.")
+                                # logging.info("This read has flag 0 (mapped, unpaired). Sending it to perfect.")
                                 perfect.write(line)
                                 perfs += 1
                             continue
@@ -77,6 +77,7 @@ if __name__ == "__main__":
     directory = path.dirname(outfile_secondary)
 
     samtools_module = "module load samtools/1.3.1"
+    samtools_source = "source /apps/bio/apps/samtools/1.3.1/samtools"
     bwa_module = "module load bwa/0.7.5a"
     logging.info("initial variables set")
     # subprocess.call("module load samtools/1.3.1", shell=True)
@@ -90,7 +91,7 @@ if __name__ == "__main__":
         print(str(intermediary))
         try:
             subprocess.check_call(
-                "{} && samtools sort {} -n -@ 112 -m 2G | samtools view - -o {} -@ 112 -h".format(samtools_module, infile,
+                "{} && samtools sort {} -n -@ 112 -m 2G | samtools view - -o {} -@ 112 -h".format(samtools_source, infile,
                                                                                                intermediary),
                 shell=True)
         except subprocess.CalledProcessError:
