@@ -76,8 +76,8 @@ if __name__ == "__main__":
     bwa_index = fasta_index.rsplit('.', 1)[0]
     directory = path.dirname(outfile_secondary)
 
-    samtools_module = "module load samtools/1.3.1"
-    samtools_source = "source /apps/bio/apps/samtools/1.3.1/samtools"
+    #samtools_module = "module load samtools/1.3.1"
+    samtools_path = "/apps/bio/apps/samtools/1.3.1/samtools"
     bwa_module = "module load bwa/0.7.5a"
     logging.info("initial variables set")
     # subprocess.call("module load samtools/1.3.1", shell=True)
@@ -91,7 +91,7 @@ if __name__ == "__main__":
         print(str(intermediary))
         try:
             subprocess.check_call(
-                "{} && samtools sort {} -n -@ 112 -m 2G | samtools view - -o {} -@ 112 -h".format(samtools_source, infile,
+                "{} sort {} -n -@ 112 -m 2G | samtools view - -o {} -@ 112 -h".format(samtools_path, infile,
                                                                                                intermediary),
                 shell=True)
         except subprocess.CalledProcessError:
@@ -109,8 +109,8 @@ if __name__ == "__main__":
         try:
             #subprocess.call("", shell=True)
             subprocess.check_call(
-                "{} && samtools view {} -@ 112 -ht {} | samtools sort - -@ 40 -m 2G -n | samtools view - -o {} -@ 112 -h".format(
-                    samtools_module, infile, fasta_index, temp), shell=True)
+                "{} view {} -@ 112 -ht {} | samtools sort - -@ 40 -m 2G -n | samtools view - -o {} -@ 112 -h".format(
+                    samtools_path, infile, fasta_index, temp), shell=True)
         except subprocess.CalledProcessError:
             logging.warning("CALLEDPROCESERROR in initial sort")
         except OSError:
@@ -133,7 +133,7 @@ if __name__ == "__main__":
 
     # Get original headers
     original_headers = directory + "/original_headers.sam"
-    subprocess.call("{} && samtools view -H {} > {}".format(samtools_module, infile, original_headers), shell=True)
+    subprocess.call("{} view -H {} > {}".format(samtools_path, infile, original_headers), shell=True)
     logging.info("Headers extracted from original input file: {} to : {}".format(infile, original_headers))
 
     secondary_tmp = outfile_secondary + "_temp"
@@ -141,7 +141,7 @@ if __name__ == "__main__":
     # Reheader the secondary mapped sam file
     # Original headers used to be the .fai, change back if crash
     subprocess.call(
-        "%s && samtools view -ht %s %s > %s" % (samtools_module, original_headers, outfile_secondary, secondary_tmp),
+        "%s view -ht %s %s > %s" % (samtools_path, original_headers, outfile_secondary, secondary_tmp),
         shell=True)
     logging.info("Temporary secondary SAM-file: {} re-headered into : {}".format(outfile_secondary, secondary_tmp))
 
@@ -152,7 +152,7 @@ if __name__ == "__main__":
 
     # Convert to fastq
     subprocess.call(
-        "%s && samtools fastq %s > %s/reads_interleaved.fastq" % (samtools_module, outfile_secondary, directory),
+        "%s fastq %s > %s/reads_interleaved.fastq" % (samtools_path, outfile_secondary, directory),
         shell=True)
     logging.info("Converted secondary to fastq")
 
@@ -175,7 +175,7 @@ if __name__ == "__main__":
     logging.info("Perfect SAM merged into remapped secondary SAM")
 
     # Convert the merged sam file into bam
-    subprocess.call("%s && samtools view -b -@ 112 %s -o %s" % (samtools_module, bwa_out, merged_bam), shell=True)
+    subprocess.call("%s view -b -@ 112 %s -o %s" % (samtools_path, bwa_out, merged_bam), shell=True)
     logging.info("Merged SAM converted to BAM")
 
     # Extract the header from the new bam file. Probably unnecessary
@@ -184,7 +184,7 @@ if __name__ == "__main__":
 
     # Reheader the merged bam file
     rehead_tmp = directory + "/temporary_reheader.bam"
-    subprocess.call("%s && samtools reheader %s %s > %s" % (samtools_module, original_headers, merged_bam, rehead_tmp),
+    subprocess.call("%s reheader %s %s > %s" % (samtools_path, original_headers, merged_bam, rehead_tmp),
                     shell=True)
     logging.info("BAM file: {} reheadered using: {} into tempfile: {}".format(merged_bam, original_headers, rehead_tmp))
 
