@@ -76,9 +76,10 @@ if __name__ == "__main__":
     bwa_index = fasta_index.rsplit('.', 1)[0]
     directory = path.dirname(outfile_secondary)
 
-    #samtools_module = "module load samtools/1.3.1"
+    # samtools_module = "module load samtools/1.3.1"
     samtools_path = "/apps/bio/apps/samtools/1.3.1/samtools"
-    bwa_module = "module load bwa/0.7.5a"
+    # bwa_module = "module load bwa/0.7.5a"
+    bwa_path = "/apps/bio/local/apps/bwa/0.7.5a/bwa"
     logging.info("initial variables set")
     # subprocess.call("module load samtools/1.3.1", shell=True)
     # subprocess.call("module load bwa/0.7.5a", shell=True)
@@ -157,8 +158,8 @@ if __name__ == "__main__":
     logging.info("Converted secondary to fastq")
 
     # Run bwa
-    subprocess.call("%s && bwa mem %s -p %s/reads_interleaved.fastq -t 112 > %s/bwa_out.sam" % (bwa_module, bwa_index,
-                                                                                                directory, directory),
+    subprocess.call("%s mem %s -p %s/reads_interleaved.fastq -t 112 > %s/bwa_out.sam" % (bwa_path, bwa_index,
+                                                                                         directory, directory),
                     shell=True)
     logging.info("Secondary reads re-mapped")
 
