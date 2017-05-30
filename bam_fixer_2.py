@@ -4,7 +4,7 @@ from sys import argv
 import subprocess
 from os import path
 import logging
-#import datetime
+import datetime
 
 """
 This script will take bam or sam files from CLC and try to convert them to a format that is more compatible with
@@ -22,12 +22,15 @@ def sam_split(samfile_in, out_perfect, out_secondary):
             with open(out_secondary, "w+") as secondary:
                 it1 = 0
                 it2 = 0
+                it3 = 0
                 perfs = 0
                 secs = 0
                 for line in sam:
                     old_line = line.split("\t")
-                    if len(old_line) != 12:
-                        logging.warning("Not 12 columns on line. Instead {} lines were found".format(str(len(old_line))))
+                    it3 += 1
+                    if len(old_line) != 13:
+                        logging.warning("Not 13 columns on line. Instead {} columns were found on line {}".format(str(len(old_line)),
+                                                                                                                  str(it3)))
                     # new_line = old_line
                     if not line.startswith("@"):
                         NH_field = old_line[-1].split(":")[-1]
@@ -112,7 +115,7 @@ if __name__ == "__main__":
         logging.info("input file was: SAM")
         temp = infile.replace(".sam", "_tmp.sam")
         try:
-            #subprocess.call("", shell=True)
+            # subprocess.call("", shell=True)
             subprocess.check_call(
                 "{} view {} -@ 112 -ht {} | samtools sort - -@ 40 -m 2G -n | samtools view - -o {} -@ 112 -h".format(
                     samtools_path, infile, fasta_index, temp), shell=True)
@@ -120,9 +123,9 @@ if __name__ == "__main__":
             logging.warning("CALLEDPROCESERROR in initial sort")
         except OSError:
             logging.warning("OSERROR in initial sort")
-        logging.info("Initial name sorting completed, starting SAM-file splitting")
+        logging.info("Initial name sorting completed, starting SAM-file splitting at: {}".format(str(datetime.datetime.now())))
         sam_split(temp, outfile_perfect, outfile_secondary)
-        logging.info("Splitting of the SAM-file completed")
+        logging.info("Splitting of the SAM-file completed at: {}".format(str(datetime.datetime.now())))
         # subprocess.call(["rm", temp])
 
     perfsize = path.getsize(outfile_perfect)
