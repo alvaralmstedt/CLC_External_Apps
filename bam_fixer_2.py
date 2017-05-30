@@ -26,9 +26,11 @@ def sam_split(samfile_in, out_perfect, out_secondary):
                 secs = 0
                 for line in sam:
                     old_line = line.split("\t")
+                    if len(old_line) != 12:
+                        logging.warning("Not 12 columns on line. Instead {} lines were found".format(str(len(old_line))))
                     # new_line = old_line
                     if not line.startswith("@"):
-                        NH_field = old_line[-2].split(":")[-1]
+                        NH_field = old_line[-1].split(":")[-1]
                         try:
                             if int(old_line[4]) <= 3 and int(NH_field) > 1 or bin(int(old_line[1]))[-2] == '0':
                                 secondary.write(line)
@@ -67,11 +69,13 @@ def sam_split(samfile_in, out_perfect, out_secondary):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG, filename="bam_fixer_2.log", filemode="w",
-                        format="%(asctime)-15s %(levelname)-8s %(message)s")
+
     infile = argv[1]
     outfile_perfect = argv[2]
     outfile_secondary = argv[3]
+    loggloc = argv[4]
+    logging.basicConfig(level=logging.DEBUG, filename=str(loggloc), filemode="w",
+                        format="%(asctime)-15s %(levelname)-8s %(message)s")
     fasta_index = "/medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta.fai"
     bwa_index = fasta_index.rsplit('.', 1)[0]
     directory = path.dirname(outfile_secondary)
