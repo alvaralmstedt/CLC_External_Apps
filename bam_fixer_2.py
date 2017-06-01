@@ -12,6 +12,9 @@ third part software that wants more bwa-like bam/sam files (such as manta for ex
 """
 
 
+def errchk():
+    subprocess.call('date 1>&2', shell=True)
+
 # Function splits input into perfectly mapped reads with NH:1 and QMAP > 3 and secondary mapped
 # with NH:>1 and QMAP < 3
 
@@ -72,7 +75,7 @@ def sam_split(samfile_in, out_perfect, out_secondary):
 
 
 if __name__ == "__main__":
-
+    errchk()
     infile = argv[1]
     outfile_perfect = argv[2]
     outfile_secondary = argv[3]
@@ -94,14 +97,17 @@ if __name__ == "__main__":
     # Determine if the inut is bam or sam
     if ".bam" in infile:
         logging.info("Input file was: BAM")
+        errchk()
         intermediary = infile.replace(".bam", ".sam")
         print(str(infile))
         print(str(intermediary))
         try:
-            subprocess.check_call(
+            # used to be check_call
+            subprocess.call(
                 "{} sort {} -n -@ 112 -m 2G | samtools view - -o {} -@ 112 -h".format(samtools_path, infile,
                                                                                                intermediary),
                 shell=True)
+            errchk()
         except subprocess.CalledProcessError:
             logging.warning("CALLEDPROCESSERROR in initial sort")
         except OSError:
@@ -116,15 +122,19 @@ if __name__ == "__main__":
         temp = infile.replace(".sam", "_tmp.sam")
         try:
             # subprocess.call("", shell=True)
-            subprocess.check_call(
+            # used to be check_call
+            subprocess.call(
                 "{} view {} -@ 112 -ht {} | samtools sort - -@ 40 -m 2G -n | samtools view - -o {} -@ 112 -h".format(
                     samtools_path, infile, fasta_index, temp), shell=True)
+            errchk()
         except subprocess.CalledProcessError:
             logging.warning("CALLEDPROCESERROR in initial sort")
         except OSError:
             logging.warning("OSERROR in initial sort")
         logging.info("Initial name sorting completed, starting SAM-file splitting at: {}".format(str(datetime.datetime.now())))
+        errchk()
         sam_split(temp, outfile_perfect, outfile_secondary)
+        errchk()
         logging.info("Splitting of the SAM-file completed at: {}".format(str(datetime.datetime.now())))
         # subprocess.call(["rm", temp])
 
@@ -143,6 +153,7 @@ if __name__ == "__main__":
     original_headers = directory + "/original_headers.sam"
     subprocess.call("{} view -H {} > {}".format(samtools_path, infile, original_headers), shell=True)
     logging.info("Headers extracted from original input file: {} to : {}".format(infile, original_headers))
+    errchk()
 
     secondary_tmp = outfile_secondary + "_temp"
 
@@ -152,24 +163,24 @@ if __name__ == "__main__":
         "%s view -ht %s %s > %s" % (samtools_path, original_headers, outfile_secondary, secondary_tmp),
         shell=True)
     logging.info("Temporary secondary SAM-file: {} re-headered into : {}".format(outfile_secondary, secondary_tmp))
-
+    errchk()
     # Rename tempfile to original name
     subprocess.call(["mv", secondary_tmp, outfile_secondary])
     logging.info("SAM-file : {} overwritten by temp file {}, which no longer exists".format(outfile_secondary,
-                                                                                            secondary_tmp))
+    errchk()                                                                                secondary_tmp))
 
     # Convert to fastq
     subprocess.call(
         "%s fastq %s > %s/reads_interleaved.fastq" % (samtools_path, outfile_secondary, directory),
         shell=True)
     logging.info("Converted secondary to fastq")
-
+    errchk()
     # Run bwa
     subprocess.call("%s mem %s -p %s/reads_interleaved.fastq -t 112 > %s/bwa_out.sam" % (bwa_path, bwa_index,
                                                                                          directory, directory),
                     shell=True)
     logging.info("Secondary reads re-mapped")
-
+    errchk()
     # Variable assignment
     bwa_out = directory + "/bwa_out.sam"
     merged_bam = directory + "/merged.bam"
@@ -181,11 +192,11 @@ if __name__ == "__main__":
     # Merge perfect mapped into the bwa output
     subprocess.call("cat %s >> %s" % (outfile_perfect, bwa_out), shell=True)
     logging.info("Perfect SAM merged into remapped secondary SAM")
-
+    errchk()
     # Convert the merged sam file into bam
     subprocess.call("%s view -b -@ 112 %s -o %s" % (samtools_path, bwa_out, merged_bam), shell=True)
     logging.info("Merged SAM converted to BAM")
-
+    errchk()
     # Extract the header from the new bam file. Probably unnecessary
     #subprocess.call("%s && samtools view -H %s > %s" % (samtools_module, merged_bam, original_headers), shell=True)
     #logging.info("Headers extracted")
@@ -195,21 +206,23 @@ if __name__ == "__main__":
     subprocess.call("%s reheader %s %s > %s" % (samtools_path, original_headers, merged_bam, rehead_tmp),
                     shell=True)
     logging.info("BAM file: {} reheadered using: {} into tempfile: {}".format(merged_bam, original_headers, rehead_tmp))
-
+    errchk()
     subprocess.call(["mv", rehead_tmp, merged_bam])
     logging.info("Non-headered bamfile: {} overwritten by headered tempfile: {}".format(merged_bam, rehead_tmp))
-
+    errchk()
     # Sort reheadered bam file
     # with open(sorted_bam, "wb") as sorted:
     subprocess.call("/apps/bio/apps/samtools/1.3.1/samtools sort -@ 112 -m 2G %s > %s" % (merged_bam, sorted_bam),
                     shell=True)
     logging.info("Final BAM: {} sorted to: {}".format(merged_bam, sorted_bam))
+    errchk()
     subprocess.call(["/apps/bio/apps/samtools/1.3.1/samtools", "index", sorted_bam])
     logging.info("Final BAM: {} indexed into: {}".format(sorted_bam, sorted_bam + ".bai"))
-
+    errchk()
     # Remove all intermediary files. Fill in later when testing is done.
     # subprocess.call(["rm", ])
 
     # Give path to result
     print("Location of output file: \n" + str(path.abspath(sorted_bam)))
     logging.info("Everything is Completed.")
+    errchk()
