@@ -167,8 +167,8 @@ if __name__ == "__main__":
     # Rename tempfile to original name
     subprocess.call(["mv", secondary_tmp, outfile_secondary])
     logging.info("SAM-file : {} overwritten by temp file {}, which no longer exists".format(outfile_secondary,
-    errchk()                                                                                secondary_tmp))
-
+                                                                                            secondary_tmp))
+    errchk()
     # Convert to fastq
     subprocess.call(
         "%s fastq %s > %s/reads_interleaved.fastq" % (samtools_path, outfile_secondary, directory),
