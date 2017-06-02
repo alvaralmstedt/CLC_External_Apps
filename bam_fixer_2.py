@@ -159,9 +159,8 @@ if __name__ == "__main__":
 
     # Reheader the secondary mapped sam file
     # Original headers used to be the .fai, change back if crash
-    subprocess.call(
-        "%s view -ht %s %s > %s" % (samtools_path, original_headers, outfile_secondary, secondary_tmp),
-        shell=True)
+    subprocess.call("{} view -ht {} {} > {}".format(samtools_path, fasta_index, outfile_secondary, secondary_tmp),
+                    shell=True)
     logging.info("Temporary secondary SAM-file: {} re-headered into : {}".format(outfile_secondary, secondary_tmp))
     errchk()
     # Rename tempfile to original name
