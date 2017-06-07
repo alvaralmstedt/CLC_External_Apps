@@ -64,14 +64,6 @@ def sam_split(samfile_in, out_perfect, out_secondary):
                                 perfs += 1
                             continue
                 logging.info("{} perfect. {} secondary. {} TypeErrors. {} ValueErrors".format(perfs, secs, it1, it2))
-                # print("Column 4 (MAPQ):" + old_line[4])
-                # print("NH" + NH_field)
-                # print(bin())
-                # print("This line will not be used:")
-                # print(line)
-                # new_line = "\t".join(new_line)
-                # print new_line
-                # yield str(new_line)
 
 
 if __name__ == "__main__":
@@ -91,8 +83,6 @@ if __name__ == "__main__":
     # bwa_module = "module load bwa/0.7.5a"
     bwa_path = "/apps/bio/local/apps/bwa/0.7.5a/bwa"
     logging.info("initial variables set")
-    # subprocess.call("module load samtools/1.3.1", shell=True)
-    # subprocess.call("module load bwa/0.7.5a", shell=True)
 
     # Determine if the inut is bam or sam
     if ".bam" in infile:
@@ -104,7 +94,7 @@ if __name__ == "__main__":
         try:
             # used to be check_call
             subprocess.call(
-                "{} sort {} -n -@ 112 -m 2G | samtools view - -o {} -@ 112 -h".format(samtools_path, infile,
+                "{} sort {} -n -@ 40 -m 2G | samtools view - -o {} -@ 40 -h".format(samtools_path, infile,
                                                                                                intermediary),
                 shell=True)
             errchk()
@@ -124,7 +114,7 @@ if __name__ == "__main__":
             # subprocess.call("", shell=True)
             # used to be check_call
             subprocess.call(
-                "{} view {} -@ 112 -ht {} | samtools sort - -@ 40 -m 2G -n | samtools view - -o {} -@ 112 -h".format(
+                "{} view {} -@ 40 -ht {} | samtools sort - -@ 40 -m 2G -n | samtools view - -o {} -@ 40 -h".format(
                     samtools_path, infile, fasta_index, temp), shell=True)
             errchk()
         except subprocess.CalledProcessError:
@@ -142,13 +132,6 @@ if __name__ == "__main__":
     secsize = path.getsize(outfile_secondary)
     logging.info("After splitting: ByteSize of Perfect: {}. Bytesize of secondary: {}".format(perfsize, secsize))
 
-    # old and unused
-    # headers = str(subprocess.call("tr '\t' '\n' < %s | grep RG: | sort | uniq" % outfile_secondary, shell=True, stdout=subprocess.PIPE))
-    # with open(outfile_secondary + "tmp", "w+") as sec_tmp:
-    #    sec_tmp.write(headers)
-    #    sec_tmp.write(outfile_secondary)
-    #    subprocess.call("mv %s %s" % (sec_tmp, outfile_secondary))
-
     # Get original headers
     original_headers = directory + "/original_headers.sam"
     subprocess.call("{} view -H {} > {}".format(samtools_path, infile, original_headers), shell=True)
@@ -158,7 +141,6 @@ if __name__ == "__main__":
     secondary_tmp = outfile_secondary + "_temp"
 
     # Reheader the secondary mapped sam file
-    # Original headers used to be the .fai, change back if crash
     subprocess.call("{} view -ht {} {} > {}".format(samtools_path, fasta_index, outfile_secondary, secondary_tmp),
                     shell=True)
     logging.info("Temporary secondary SAM-file: {} re-headered into : {}".format(outfile_secondary, secondary_tmp))
@@ -175,7 +157,7 @@ if __name__ == "__main__":
     logging.info("Converted secondary to fastq")
     errchk()
     # Run bwa
-    subprocess.call("%s mem %s -p %s/reads_interleaved.fastq -t 112 > %s/bwa_out.sam" % (bwa_path, bwa_index,
+    subprocess.call("%s mem %s -p %s/reads_interleaved.fastq -t 40 > %s/bwa_out.sam" % (bwa_path, bwa_index,
                                                                                          directory, directory),
                     shell=True)
     logging.info("Secondary reads re-mapped")
@@ -193,12 +175,9 @@ if __name__ == "__main__":
     logging.info("Perfect SAM merged into remapped secondary SAM")
     errchk()
     # Convert the merged sam file into bam
-    subprocess.call("%s view -b -@ 112 %s -o %s" % (samtools_path, bwa_out, merged_bam), shell=True)
+    subprocess.call("%s view -b -@ 40 %s -o %s" % (samtools_path, bwa_out, merged_bam), shell=True)
     logging.info("Merged SAM converted to BAM")
     errchk()
-    # Extract the header from the new bam file. Probably unnecessary
-    #subprocess.call("%s && samtools view -H %s > %s" % (samtools_module, merged_bam, original_headers), shell=True)
-    #logging.info("Headers extracted")
 
     # Reheader the merged bam file
     rehead_tmp = directory + "/temporary_reheader.bam"
@@ -211,7 +190,7 @@ if __name__ == "__main__":
     errchk()
     # Sort reheadered bam file
     # with open(sorted_bam, "wb") as sorted:
-    subprocess.call("/apps/bio/apps/samtools/1.3.1/samtools sort -@ 112 -m 2G %s > %s" % (merged_bam, sorted_bam),
+    subprocess.call("/apps/bio/apps/samtools/1.3.1/samtools sort -@ 40 -m 2G %s > %s" % (merged_bam, sorted_bam),
                     shell=True)
     logging.info("Final BAM: {} sorted to: {}".format(merged_bam, sorted_bam))
     errchk()
@@ -219,9 +198,10 @@ if __name__ == "__main__":
     logging.info("Final BAM: {} indexed into: {}".format(sorted_bam, sorted_bam + ".bai"))
     errchk()
     # Remove all intermediary files. Fill in later when testing is done.
+    # This is currently being done in the wrapper script so I will leave this commented
     # subprocess.call(["rm", ])
 
     # Give path to result
     print("Location of output file: \n" + str(path.abspath(sorted_bam)))
-    logging.info("Everything is Completed.")
+    logging.info("Everything is Completed at {}.".format(str(datetime.datetime.now())))
     errchk()
