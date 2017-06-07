@@ -94,9 +94,8 @@ if __name__ == "__main__":
         try:
             # used to be check_call
             subprocess.call(
-                "{} sort {} -n -@ 40 -m 2G | samtools view - -o {} -@ 40 -h".format(samtools_path, infile,
-                                                                                               intermediary),
-                shell=True)
+                "{} sort {} -n -@ 8 -m 2G -T {} | samtools view - -o {} -@ 8 -h".format(samtools_path, infile, directory,
+                                                                                        intermediary), shell=True)
             errchk()
         except subprocess.CalledProcessError:
             logging.warning("CALLEDPROCESSERROR in initial sort")
@@ -114,8 +113,8 @@ if __name__ == "__main__":
             # subprocess.call("", shell=True)
             # used to be check_call
             subprocess.call(
-                "{} view {} -@ 40 -ht {} | samtools sort - -@ 40 -m 2G -n | samtools view - -o {} -@ 40 -h".format(
-                    samtools_path, infile, fasta_index, temp), shell=True)
+                "{} view {} -@ 8 -ht {} | samtools sort - -@ 8 -m 2G -n -T {} | samtools view - -o {} -@ 8 -h".format(
+                            samtools_path, infile, fasta_index, directory, temp), shell=True)
             errchk()
         except subprocess.CalledProcessError:
             logging.warning("CALLEDPROCESERROR in initial sort")
@@ -157,8 +156,8 @@ if __name__ == "__main__":
     logging.info("Converted secondary to fastq")
     errchk()
     # Run bwa
-    subprocess.call("%s mem %s -p %s/reads_interleaved.fastq -t 40 > %s/bwa_out.sam" % (bwa_path, bwa_index,
-                                                                                         directory, directory),
+    subprocess.call("%s mem %s -p %s/reads_interleaved.fastq -t 8 > %s/bwa_out.sam" % (bwa_path, bwa_index,
+                                                                                       directory, directory),
                     shell=True)
     logging.info("Secondary reads re-mapped")
     errchk()
@@ -175,7 +174,7 @@ if __name__ == "__main__":
     logging.info("Perfect SAM merged into remapped secondary SAM")
     errchk()
     # Convert the merged sam file into bam
-    subprocess.call("%s view -b -@ 40 %s -o %s" % (samtools_path, bwa_out, merged_bam), shell=True)
+    subprocess.call("%s view -b -@ 8 %s -o %s" % (samtools_path, bwa_out, merged_bam), shell=True)
     logging.info("Merged SAM converted to BAM")
     errchk()
 
@@ -190,8 +189,8 @@ if __name__ == "__main__":
     errchk()
     # Sort reheadered bam file
     # with open(sorted_bam, "wb") as sorted:
-    subprocess.call("/apps/bio/apps/samtools/1.3.1/samtools sort -@ 40 -m 2G %s > %s" % (merged_bam, sorted_bam),
-                    shell=True)
+    subprocess.call("/apps/bio/apps/samtools/1.3.1/samtools sort -T %s -@ 8 -m 2G %s > %s" % (directory, merged_bam,
+                                                                                              sorted_bam), shell=True)
     logging.info("Final BAM: {} sorted to: {}".format(merged_bam, sorted_bam))
     errchk()
     subprocess.call(["/apps/bio/apps/samtools/1.3.1/samtools", "index", sorted_bam])
