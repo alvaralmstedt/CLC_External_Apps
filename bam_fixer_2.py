@@ -104,7 +104,7 @@ if __name__ == "__main__":
             logging.warning("OSERROR in initial sort")
         logging.info("Initial conversion of BAM to SAM (name sorted) completed. Now starting SAM-file splitting")
         sam_split(intermediary, outfile_perfect, outfile_secondary)
-        # subprocess.call(["rm", intermediary])
+        subprocess.call(["rm", str(intermediary)])
         logging.info("Splitting of the SAM-file completed")
     elif ".sam" in infile:
         logging.info("input file was: SAM")
@@ -125,7 +125,7 @@ if __name__ == "__main__":
         sam_split(temp, outfile_perfect, outfile_secondary)
         errchk()
         logging.info("Splitting of the SAM-file completed at: {}".format(str(datetime.datetime.now())))
-        # subprocess.call(["rm", temp])
+        subprocess.call(["rm", temp])
 
     perfsize = path.getsize(outfile_perfect)
     secsize = path.getsize(outfile_secondary)
@@ -161,6 +161,7 @@ if __name__ == "__main__":
                     shell=True)
     logging.info("Secondary reads re-mapped")
     errchk()
+
     # Variable assignment
     bwa_out = directory + "/bwa_out.sam"
     merged_bam = directory + "/merged.bam"
@@ -168,15 +169,26 @@ if __name__ == "__main__":
     new_headers = directory + "/new_headers.sam"
     logging.info("Merger-related variables set: {}, {}, {}, {} (not used)".format(bwa_out, merged_bam, sorted_bam,
                                                                                   new_headers))
-
     # Merge perfect mapped into the bwa output
     subprocess.call("cat %s >> %s" % (outfile_perfect, bwa_out), shell=True)
     logging.info("Perfect SAM merged into remapped secondary SAM")
     errchk()
+
+    # Remove now unnecessary perfect.sam and secondary.sam
+
+    subprocess.call(["rm", str(outfile_perfect)])
+    subprocess.call(["rm", str(outfile_secondary)])
+    logging.info("{} and {} removed".format(outfile_perfect, outfile_secondary))
+    errchk()
+
     # Convert the merged sam file into bam
     subprocess.call("%s view -b -@ 8 %s -o %s" % (samtools_path, bwa_out, merged_bam), shell=True)
     logging.info("Merged SAM converted to BAM")
     errchk()
+
+    # Remove large merged sam file
+    subprocess.call(["rm", str(bwa_out)])
+    logging.info("{} removed".format(bwa_out))
 
     # Reheader the merged bam file
     rehead_tmp = directory + "/temporary_reheader.bam"
@@ -187,6 +199,7 @@ if __name__ == "__main__":
     subprocess.call(["mv", rehead_tmp, merged_bam])
     logging.info("Non-headered bamfile: {} overwritten by headered tempfile: {}".format(merged_bam, rehead_tmp))
     errchk()
+
     # Sort reheadered bam file
     # with open(sorted_bam, "wb") as sorted:
     subprocess.call("/apps/bio/apps/samtools/1.3.1/samtools sort -T %s -@ 8 -m 2G %s > %s" % (directory, merged_bam,
