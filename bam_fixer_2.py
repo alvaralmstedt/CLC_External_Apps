@@ -131,9 +131,10 @@ if __name__ == "__main__":
         try:
             # used to be check_call
             subprocess.call(
-                "{} sort {} -n -@ {} -m {}G -T {} | samtools view - -o {} -@ {2} -h".format(samtools_path, infile,
-                                                                                            threads, memory, directory,
-                                                                                            intermediary),
+                "{0} sort {1} -n -@ {2} -m {3}G -T {4} | samtools view - -o {5} -@ {2} -h".format(samtools_path, infile,
+                                                                                                  threads, memory,
+                                                                                                  directory,
+                                                                                                  intermediary),
                 shell=True)
             errchk()
         except subprocess.CalledProcessError:
