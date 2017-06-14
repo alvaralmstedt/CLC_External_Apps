@@ -46,6 +46,7 @@ def sam_split(samfile_in, out_perfect, out_secondary):
                 it3 = 0
                 perfs = 0
                 secs = 0
+                truvalerrors = 0
                 for line in sam:
                     old_line = line.split("\t")
                     it3 += 1
@@ -80,8 +81,10 @@ def sam_split(samfile_in, out_perfect, out_secondary):
                                 # logging.info("This read has flag 0 (mapped, unpaired). Sending it to perfect.")
                                 perfect.write(line)
                                 perfs += 1
+                            else:
+                                truvalerrors += 1
                             continue
-                logging.info("{} perfect. {} secondary. {} TypeErrors. {} ValueErrors".format(perfs, secs, it1, it2))
+                logging.info("{} perfect. {} secondary. {} TypeErrors. {} ValueErrors of which {} are real errors".format(perfs, secs, it1, it2, truvalerrors))
 
 
 if __name__ == "__main__":
