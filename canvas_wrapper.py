@@ -18,7 +18,6 @@ cnv_copynumber_obs = argv[5]
 cnv_copynumber_call = argv[6]
 uname = argv[7]
 custom_uname = argv[8]
-timestring = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M")
 
 igv_data_folder = "/medstore/IGV_Folders/igv/data/%s" % uname
 
