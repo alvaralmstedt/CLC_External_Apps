@@ -5,7 +5,9 @@ from subprocess import call
 from sys import argv
 from math import log
 import socket
+import datetime
 
+timestring = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M")
 bam_file = argv[1]
 mode = argv[2]
 # vcf_in_1 = argv[3]
@@ -15,6 +17,8 @@ cnv_text = argv[4]
 cnv_copynumber_obs = argv[5]
 cnv_copynumber_call = argv[6]
 uname = argv[7]
+custom_uname = argv[8]
+timestring = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M")
 
 igv_data_folder = "/medstore/IGV_Folders/igv/data/%s" % uname
 
@@ -141,13 +145,18 @@ with open("/tmp/canvas_dir/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as 
 
 call("gunzip /tmp/canvas_dir/outdir/CNV.vcf.gz", shell=True)
 call("mv /tmp/canvas_dir/outdir/CNV.vcf %s" % vcf_out, shell=True)
-call("cp /tmp/canvas_dir/outdir/CNV_observed.seg %s" % igv_data_folder, shell=True)
+call("cp /tmp/canvas_dir/outdir/CNV_observed.seg %s/CNV_observed_%s.seg" % (igv_data_folder, timestring), shell=True)
 call("mv /tmp/canvas_dir/outdir/CNV_observed.seg %s" % cnv_copynumber_obs, shell=True)
-call("cp /tmp/canvas_dir/outdir/CNV_called.seg %s" % igv_data_folder, shell=True)
+call("cp /tmp/canvas_dir/outdir/CNV_called.seg %s/CNV_called_%s.seg" % (igv_data_folder, timestring), shell=True)
 call("mv /tmp/canvas_dir/outdir/CNV_called.seg %s" % cnv_copynumber_call, shell=True)
 call("mv /tmp/canvas_dir/outdir/CNV.CoverageAndVariantFrequency.txt %s" % cnv_text, shell=True)
 
-igv_modification(uname, igv_data_folder + "/CNV_observed.seg")
-igv_modification(uname, igv_data_folder + "/CNV_called.seg")
+if os.path.isfile("/medstore/IGV_Folders/igv/users/{}_igv.xml".format(custom_uname)):
+    igv_modification(custom_uname, igv_data_folder + "/CNV_observed_{}.seg".format(timestring))
+    igv_modification(custom_uname, igv_data_folder + "/CNV_called_{}.seg".format(timestring))
+else:
+    print("{} is not a valid user. IGV destination")
+    igv_modification(uname, igv_data_folder + "/CNV_observed_{}.seg".format(timestring))
+    igv_modification(uname, igv_data_folder + "/CNV_called_{}.seg".format(timestring))
 
 call("rm -rf /tmp/canvas_dir", shell=True)
