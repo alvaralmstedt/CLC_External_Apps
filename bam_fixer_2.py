@@ -55,7 +55,7 @@ def sam_split(samfile_in, out_perfect, out_secondary):
                                                                                                                   str(it3)))
                     # new_line = old_line
                     if not line.startswith("@"):
-                        NH_field = old_line[-1].split(":")[-1]
+                        NH_field = old_line[-2].split(":")[-1]
                         try:
                             if int(old_line[4]) <= 3 and int(NH_field) > 1 or bin(int(old_line[1]))[-2] == '0':
                                 secondary.write(line)
