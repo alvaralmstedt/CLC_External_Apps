@@ -114,7 +114,7 @@ if __name__ == "__main__":
     loggloc = argv[4]
     logging.basicConfig(level=logging.DEBUG, filename=str(loggloc), filemode="w",
                         format="%(asctime)-15s %(levelname)-8s %(message)s")
-    fasta_index = "/medstore/External_References/hg19/CHR/Homo_sapines_sequence_hg19_CHR.fasta.fai"
+    fasta_index = "/medstore/External_References/hg19/CHR/Homo_sapiens_sequence_hg19_CHR.fasta.fai"
     bwa_index = fasta_index.rsplit('.', 1)[0]
     directory = path.dirname(outfile_secondary)
 
