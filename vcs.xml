@@ -6,6 +6,10 @@
           <option name="url" value="https://github.com/alvaralmstedt/CLC_External_Apps" />
           <option name="userName" value="" />
         </UrlAndUserName>
+        <UrlAndUserName>
+          <option name="url" value="https://github.com/alvaralmstedt/py_scripts" />
+          <option name="userName" value="" />
+        </UrlAndUserName>
       </list>
     </option>
     <option name="cloneParentDir" value="C:\Users\Alvar\PycharmProjects" />
