@@ -5,31 +5,48 @@ from subprocess import call
 from sys import argv
 from math import log
 import socket
+import datetime
 
+timestring = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M")
 bam_file = argv[1]
 mode = argv[2]
-#vcf_in_1 = argv[3]
-#vcf_in_2 = argv[4]
+# vcf_in_1 = argv[3]
+# vcf_in_2 = argv[4]
 vcf_out = argv[3]
 cnv_text = argv[4]
 cnv_copynumber_obs = argv[5]
 cnv_copynumber_call = argv[6]
 uname = argv[7]
+custom_uname = argv[8]
 
 igv_data_folder = "/medstore/IGV_Folders/igv/data/%s" % uname
 
+
 def igv_modification(user, infile):
-    with open("/medstore/IGV_Folders/igv/users/%s_igv.xml" % user, "w+") as userfile:
+    with open("/medstore/IGV_Folders/igv/users/%s_igv.xml" % user, "r+") as userfile:
+        lines_of_file = userfile.readlines()
         bam = os.path.basename(infile)
-        newfile = []
-        for line in userfile.readlines()[:-2]:
-        #    if "<Resource name=" in line:
-                newfile.append(line)
-        newfile.append('\t\t<Resource name="%s" path="http://medstore.sahlgrenska.gu.se:8008/data/%s/%s"' % (bam, user, bam))
-        newfile.append("\t</Category>")
-        newfile.append("</Global>")
-        for i in newfile:
-            userfile.write(i + "\n")
+        lines_of_file.insert(-2,
+                             '\t\t<Resource name="%s" path="http://medstore.sahlgrenska.gu.se:8008/data/%s/%s" />\n' % (
+                                 bam, user, bam))
+        userfile.seek(0)
+        userfile.truncate()
+        userfile.writelines(lines_of_file)
+
+        # Old solution (not the best)
+        # bam = os.path.basename(infile)
+        # newfile = []
+        # for line in userfile.readlines()[:-2]:
+        #     # if "<Resource name=" in line:
+        #     newfile.append(line.rstrip("\n"))
+        # newfile.append('\t\t<Resource name="%s" path="http://medstore.sahlgrenska.gu.se:8008/data/%s/%s" />' % (bam,
+        #                                                                                                        user,
+        #                                                                                                        bam))
+        # newfile.append("\t</Category>")
+        # newfile.append("</Global>")
+        # for j in newfile:
+        #     userfile.write(j)
+
 
 error_file = open("/tmp/canvaserror.log", 'w+')
 error_file.write(str(socket.gethostname()))
@@ -65,7 +82,7 @@ if ".txt" in str(bam_file):
     bam_text_file.close()
     array = bam_file.split("/")
     filename = array[-1]
-#    bam_path = "/tmp/canvas/bam/%s" % filename.rstrip()
+    #    bam_path = "/tmp/canvas/bam/%s" % filename.rstrip()
     bam_path = "/tmp/canvas_dir/bam/"
     indexed = 1
     print("bam_file: " + str(bam_file))
@@ -76,18 +93,21 @@ error_file.write("Bampath after looking in text: %s" % bam_path)
 call(["cp", str(bam_file), "-t", str(bam_path)])
 call(["cp", str(bam_file) + ".bai", "-t", str(bam_path)])
 call("cp -r /medstore/External_References/Canvas_CLC_HG19_Dataset /tmp/canvas_dir/", shell=True)
-call("cp -r /medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta* /tmp/canvas_dir/Canvas_CLC_HG19_Dataset", shell=True)
+call(
+    "cp -r /medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta* /tmp/canvas_dir/Canvas_CLC_HG19_Dataset",
+    shell=True)
 
 if not indexed:
     call("module load samtools/1.3.1", shell=True)
     call("/medstore/IGV_Folders/samtools index /tmp/canvas_dir/bam/%s" % filename, shell=True)
 
 call(["/usr/bin/mono", "/apps/CLC_ExternalApps/canvas/1.11.0/Canvas.exe", str(mode), "-b",
-      "/tmp/canvas_dir/bam/" + str(filename), "--b-allele-vcf=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/dbsnp_common_all_20160601.vcf",
+      "/tmp/canvas_dir/bam/" + str(filename),
+      "--b-allele-vcf=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/dbsnp_common_all_20160601.vcf",
+      "--exclude-non-het-b-allele-sites",
       "-o", "/tmp/canvas_dir/outdir", "--reference=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/kmer.fa",
       "-g", "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/", "-f", "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/filter13.bed",
       "-n", "WGS", "--custom-parameters=CanvasBin,-p"])
-
 
 with open("/tmp/canvas_dir/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as INFILE:
     with open("/tmp/canvas_dir/outdir/CNV_observed.seg", "w+") as OUTFILE:
@@ -125,13 +145,18 @@ with open("/tmp/canvas_dir/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as 
 
 call("gunzip /tmp/canvas_dir/outdir/CNV.vcf.gz", shell=True)
 call("mv /tmp/canvas_dir/outdir/CNV.vcf %s" % vcf_out, shell=True)
-call("cp /tmp/canvas_dir/outdir/CNV_observed.seg %s" % igv_data_folder, shell=True)
+call("cp /tmp/canvas_dir/outdir/CNV_observed.seg %s/CNV_observed_%s.seg" % (igv_data_folder, timestring), shell=True)
 call("mv /tmp/canvas_dir/outdir/CNV_observed.seg %s" % cnv_copynumber_obs, shell=True)
-call("cp /tmp/canvas_dir/outdir/CNV_called.seg %s" % igv_data_folder, shell=True)
+call("cp /tmp/canvas_dir/outdir/CNV_called.seg %s/CNV_called_%s.seg" % (igv_data_folder, timestring), shell=True)
 call("mv /tmp/canvas_dir/outdir/CNV_called.seg %s" % cnv_copynumber_call, shell=True)
 call("mv /tmp/canvas_dir/outdir/CNV.CoverageAndVariantFrequency.txt %s" % cnv_text, shell=True)
 
-igv_modification(uname, igv_data_folder + "/CNV_observed.seg")
-igv_modification(uname, igv_data_folder + "/CNV_called.seg")
+if os.path.isfile("/medstore/IGV_Folders/igv/users/{}_igv.xml".format(custom_uname)):
+    igv_modification(custom_uname, igv_data_folder + "/CNV_observed_{}.seg".format(timestring))
+    igv_modification(custom_uname, igv_data_folder + "/CNV_called_{}.seg".format(timestring))
+else:
+    print("{} is not a valid user. IGV destination")
+    igv_modification(uname, igv_data_folder + "/CNV_observed_{}.seg".format(timestring))
+    igv_modification(uname, igv_data_folder + "/CNV_called_{}.seg".format(timestring))
 
 call("rm -rf /tmp/canvas_dir", shell=True)
