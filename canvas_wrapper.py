@@ -55,8 +55,12 @@ for i in argv:
     print(i)
     error_file.write(i + "\n")
 
-if "Somatic" in mode:
+if "Somatic-WGS" in mode:
     mode = "Somatic-WGS"
+elif "Enrichment" in mode:
+    mode = "Somatic-Enrichment"
+elif "enrichment" in mode:
+    mode = "Tumor-normal-enrichment"
 else:
     mode = "Germline-WGS"
 

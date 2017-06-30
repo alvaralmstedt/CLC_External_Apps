@@ -5,6 +5,7 @@ import subprocess
 from os import path
 import logging
 import datetime
+import sam_parse
 
 """
 This script will take bam or sam files from CLC and try to convert them to a format that is more compatible with
@@ -146,7 +147,8 @@ if __name__ == "__main__":
             print("OSERROR")
             logging.warning("OSERROR in initial sort")
         logging.info("Initial conversion of BAM to SAM (name sorted) completed. Now starting SAM-file splitting")
-        sam_split(intermediary, outfile_perfect, outfile_secondary)
+        # sam_split(intermediary, outfile_perfect, outfile_secondary)
+        sam_parse.sam_split_runner(intermediary, directory, 2500000, threads)
         subprocess.call(["rm", str(intermediary)])
         logging.info("Splitting of the SAM-file completed")
     elif ".sam" in infile:
@@ -165,7 +167,8 @@ if __name__ == "__main__":
             logging.warning("OSERROR in initial sort")
         logging.info("Initial name sorting completed, starting SAM-file splitting at: {}".format(str(datetime.datetime.now())))
         errchk()
-        sam_split(temp, outfile_perfect, outfile_secondary)
+        # sam_split(temp, outfile_perfect, outfile_secondary)
+        sam_parse.sam_split_runner(temp, directory, 2500000, threads)
         errchk()
         logging.info("Splitting of the SAM-file completed at: {}".format(str(datetime.datetime.now())))
         subprocess.call(["rm", temp])
