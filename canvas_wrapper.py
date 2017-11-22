@@ -7,6 +7,8 @@ from math import log
 import socket
 import datetime
 import argparse
+import glob
+import shutil
 
 timestring = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M")
 # bam_file = argv[1]
@@ -43,6 +45,7 @@ parser.add_argument("-n", "--custom_uname", nargs="?", action='store', type=str,
 parser.add_argument("-a", "--manifest", nargs="?", action='store', type=str, help='Specify the path to the exome'
                                                                                   ' manifest file')
 parser.add_argument("-r", "--normal_bam", nargs="?", action='store', type=str, help='Full path to bam_normal input file')
+parser.add_argument("-s", "--sex", nargs="?", action='store', type=str, help='Specify sex of input sample')
 
 args = parser.parse_args()
 
@@ -68,6 +71,8 @@ if manifest:
 normal_bam = str(args.normal_bam)
 if normal_bam:
     print(normal_bam)
+sex = str(args.sex)
+print(sex)
 print args
 
 igv_data_folder = "/medstore/IGV_Folders/igv/data/%s" % uname
@@ -87,27 +92,13 @@ def igv_modification(user, infile):
         userfile.truncate()
         userfile.writelines(lines_of_file)
 
-        # Old solution (not the best)
-        # bam = os.path.basename(infile)
-        # newfile = []
-        # for line in userfile.readlines()[:-2]:
-        #     # if "<Resource name=" in line:
-        #     newfile.append(line.rstrip("\n"))
-        # newfile.append('\t\t<Resource name="%s" path="http://medstore.sahlgrenska.gu.se:8008/data/%s/%s" />' % (bam,
-        #                                                                                                        user,
-        #                                                                                                        bam))
-        # newfile.append("\t</Category>")
-        # newfile.append("</Global>")
-        # for j in newfile:
-        #     userfile.write(j)
-
-
+shutil.rmtree("/tmp/canvas_dir")
 error_file = open("/tmp/canvaserror.log", 'w+')
 error_file.write(str(socket.gethostname()))
 
-for i in argv:
-    print(i)
-    error_file.write(i + "\n")
+# for i in argv:
+#    print(i)
+#    error_file.write(i + "\n")
 
 # if "Somatic-WGS" in mode:
 #     mode = "Somatic-WGS"
@@ -214,6 +205,12 @@ elif "Enrichment" in mode:
     mode = "Somatic-Enrichment"
     print("Somatic-Enrichment selected")
     call(["cp", str(manifest), "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/manifest.txt"])
+    if sex == "male":
+        print("male")
+        pattern = "/medstore/CLC_Import_Export/Alvar_Almstedt/canvas_related/control_samples/binned/male/*/*"
+        paths = glob.glob(pattern)
+    else:
+        print("female")
     call(["/usr/bin/mono", "/apps/CLC_ExternalApps/canvas/1.11.0/Canvas.exe", str(mode), "-b",
           "/tmp/canvas_dir/bam/" + str(bam_filename),
           "--b-allele-vcf=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/dbsnp_common_all_20160601.vcf",
@@ -301,4 +298,4 @@ else:
     igv_modification(uname, igv_data_folder + "/CNV_observed_{}.seg".format(timestring))
     igv_modification(uname, igv_data_folder + "/CNV_called_{}.seg".format(timestring))
 
-call("rm -rf /tmp/canvas_dir", shell=True)
+# call("rm -rf /tmp/canvas_dir", shell=True)

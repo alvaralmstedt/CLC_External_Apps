@@ -2,7 +2,7 @@
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$" />
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="Remote Python 3.6.2 (sftp://xalmal@medair.sahlgrenska.gu.se:22/home/xalmal/anaconda2/envs/py3h/bin/python3.6)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="py_scripts" />
     <orderEntry type="module" module-name="python_genome_ref_collab" />

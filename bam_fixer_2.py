@@ -9,8 +9,8 @@ import sam_parse
 
 """
 This script will take bam or sam files from CLC and try to convert them to a format that is more compatible with
-third part software that wants more bwa-like bam/sam files (such as manta for example). Work In Progress.
-Aimed to be used for manta
+third party software that wants more bwa-like bam/sam files (such as manta for example). Work In Progress.
+Aimed to be used with manta
 """
 
 
@@ -35,7 +35,7 @@ def determine_node():
     else:
         return node
 
-
+# sam_split is no longer used. Replaced with separate sam_parse script
 # Function splits input into perfectly mapped reads with NH:1 and QMAP > 3 and secondary mapped
 # with NH:>1 and QMAP < 3
 
