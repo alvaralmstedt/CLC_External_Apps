@@ -124,8 +124,8 @@ if __name__ == "__main__":
                                                                                                           str(outfile_secondary),
                                                                                                           str(loggloc)))
 
-    # samtools_module = "module load samtools/1.3.1"
-    samtools_path = "/apps/bio/apps/samtools/1.3.1/samtools"
+    # samtools_module = "module load samtools/1.6"
+    samtools_path = "/apps/bio/apps/samtools/1.6/samtools"
     # bwa_module = "module load bwa/0.7.5a"
     bwa_path = "/apps/bio/local/apps/bwa/0.7.5a/bwa"
     logging.info("initial variables set")
@@ -175,7 +175,7 @@ if __name__ == "__main__":
             # subprocess.call("", shell=True)
             # used to be check_call
             subprocess.call(
-                "{0} view {1} -@ {2} -ht {3} | samtools sort - -@ {2} -m 2G -n -T {4} | samtools view - -o {5} -@ {2} "
+                "{0} view {1} -@ {2} -ht {3} -1 | samtools sort - -@ {2} -m 2G -n -T {4} | samtools view - -o {5} -@ {2} "
                 "-h".format(samtools_path, infile, threads, fasta_index, directory, temp), shell=True)
             errchk()
         except subprocess.CalledProcessError:
@@ -268,7 +268,7 @@ if __name__ == "__main__":
 
     # Sort reheadered bam file
     # with open(sorted_bam, "wb") as sorted:
-    subprocess.call("/apps/bio/apps/samtools/1.3.1/samtools sort -T %s -@ %s -m %sG %s > %s" % (directory, threads,
+    subprocess.call("/apps/bio/apps/samtools/1.6/samtools sort -T %s -@ %s -m %sG %s > %s" % (directory, threads,
                                                                                                 memory, merged_bam,
                                                                                                 sorted_bam),
                     shell=True)
@@ -279,7 +279,7 @@ if __name__ == "__main__":
     subprocess.call(["rm", merged_bam])
     logging.info("{} removed".format(merged_bam))
 
-    subprocess.call(["/apps/bio/apps/samtools/1.3.1/samtools", "index", sorted_bam])
+    subprocess.call(["/apps/bio/apps/samtools/1.6/samtools", "index", sorted_bam])
     logging.info("Final BAM: {} indexed into: {}".format(sorted_bam, sorted_bam + ".bai"))
     errchk()
     # Remove all intermediary files. Fill in later when testing is done.
