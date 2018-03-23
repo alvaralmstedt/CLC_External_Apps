@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Global name="admin"  infolink="http://www.broadinstitute.org/igv/" version="1">
+    <Category name="Alvar Almstedt">
+		<Resource name="alvar.xml" path="http://medstore.sahlgrenska.gu.se:8008/data/alvar.almstedt/alvar.xml" />
+		<Resource name="alvar.xml" path="http://medstore.sahlgrenska.gu.se:8008/data/alvar.almstedt/alvar.xml" />
+		<Resource name="alvar.xml" path="http://medstore.sahlgrenska.gu.se:8008/data/alvar.almstedt/alvar.xml" />
+		<Resource name="alvar.xml" path="http://medstore.sahlgrenska.gu.se:8008/data/alvar.almstedt/alvar.xml" />
+		<Resource name="alvar.xml" path="http://medstore.sahlgrenska.gu.se:8008/data/alvar.almstedt/alvar.xml" />
+		<Resource name="alvar.xml" path="http://medstore.sahlgrenska.gu.se:8008/data/alvar.almstedt/alvar.xml" />
+		<Resource name="alvar.xml" path="http://medstore.sahlgrenska.gu.se:8008/data/alvar.almstedt/alvar.xml" />
+		<Resource name="alvar.xml" path="http://medstore.sahlgrenska.gu.se:8008/data/alvar.almstedt/alvar.xml" />
+		<Resource name="alvar.xml" path="http://medstore.sahlgrenska.gu.se:8008/data/alvar.almstedt/alvar.xml" />
+    </Category>
+</Global>
