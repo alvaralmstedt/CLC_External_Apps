@@ -7,8 +7,11 @@ from math import log
 import socket
 import datetime
 import argparse
+<<<<<<< HEAD
 import glob
 import shutil
+=======
+>>>>>>> 80c8c242ab5a15af3e8012b3d55375fbc93e8d23
 
 timestring = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M")
 # bam_file = argv[1]
@@ -45,7 +48,10 @@ parser.add_argument("-n", "--custom_uname", nargs="?", action='store', type=str,
 parser.add_argument("-a", "--manifest", nargs="?", action='store', type=str, help='Specify the path to the exome'
                                                                                   ' manifest file')
 parser.add_argument("-r", "--normal_bam", nargs="?", action='store', type=str, help='Full path to bam_normal input file')
+<<<<<<< HEAD
 parser.add_argument("-s", "--sex", nargs="?", action='store', type=str, help='Specify sex of input sample')
+=======
+>>>>>>> 80c8c242ab5a15af3e8012b3d55375fbc93e8d23
 
 args = parser.parse_args()
 
@@ -71,8 +77,11 @@ if manifest:
 normal_bam = str(args.normal_bam)
 if normal_bam:
     print(normal_bam)
+<<<<<<< HEAD
 sex = str(args.sex)
 print(sex)
+=======
+>>>>>>> 80c8c242ab5a15af3e8012b3d55375fbc93e8d23
 print args
 
 igv_data_folder = "/medstore/IGV_Folders/igv/data/%s" % uname
@@ -186,11 +195,19 @@ call("cp /medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta.fai
 if not indexed_bam:
     # call("module load samtools/1.3.1", shell=True)
     call("/medstore/IGV_Folders/samtools index /tmp/canvas_dir/bam/%s" % bam_filename, shell=True)
+<<<<<<< HEAD
 
 if not indexed_normal:
     # call("module load samtools/1.3.1", shell=True)
     call("/medstore/IGV_Folders/samtools index /tmp/canvas_dir/bam/%s" % normal_filename, shell=True)
 
+=======
+
+if not indexed_normal:
+    # call("module load samtools/1.3.1", shell=True)
+    call("/medstore/IGV_Folders/samtools index /tmp/canvas_dir/bam/%s" % normal_filename, shell=True)
+
+>>>>>>> 80c8c242ab5a15af3e8012b3d55375fbc93e8d23
 if "Somatic-WGS" in mode:
     mode = "Somatic-WGS"
     print("Somatic-WGS selected")
@@ -205,12 +222,15 @@ elif "Enrichment" in mode:
     mode = "Somatic-Enrichment"
     print("Somatic-Enrichment selected")
     call(["cp", str(manifest), "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/manifest.txt"])
+<<<<<<< HEAD
     if sex == "male":
         print("male")
         pattern = "/medstore/CLC_Import_Export/Alvar_Almstedt/canvas_related/control_samples/binned/male/*/*"
         paths = glob.glob(pattern)
     else:
         print("female")
+=======
+>>>>>>> 80c8c242ab5a15af3e8012b3d55375fbc93e8d23
     call(["/usr/bin/mono", "/apps/CLC_ExternalApps/canvas/1.11.0/Canvas.exe", str(mode), "-b",
           "/tmp/canvas_dir/bam/" + str(bam_filename),
           "--b-allele-vcf=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/dbsnp_common_all_20160601.vcf",

@@ -9,8 +9,8 @@ import sam_parse
 
 """
 This script will take bam or sam files from CLC and try to convert them to a format that is more compatible with
-third part software that wants more bwa-like bam/sam files (such as manta for example). Work In Progress.
-Aimed to be used for manta
+third party software that wants more bwa-like bam/sam files (such as manta for example). Work In Progress.
+Aimed to be used with manta
 """
 
 
@@ -35,7 +35,7 @@ def determine_node():
     else:
         return node
 
-
+# sam_split is no longer used. Replaced with separate sam_parse script
 # Function splits input into perfectly mapped reads with NH:1 and QMAP > 3 and secondary mapped
 # with NH:>1 and QMAP < 3
 
@@ -124,8 +124,8 @@ if __name__ == "__main__":
                                                                                                           str(outfile_secondary),
                                                                                                           str(loggloc)))
 
-    # samtools_module = "module load samtools/1.3.1"
-    samtools_path = "/apps/bio/apps/samtools/1.3.1/samtools"
+    # samtools_module = "module load samtools/1.6"
+    samtools_path = "/apps/bio/apps/samtools/1.6/samtools"
     # bwa_module = "module load bwa/0.7.5a"
     bwa_path = "/apps/bio/local/apps/bwa/0.7.5a/bwa"
     logging.info("initial variables set")
@@ -165,7 +165,7 @@ if __name__ == "__main__":
             logging.warning("OSERROR in initial sort (bam)")
         logging.info("Initial conversion of BAM to SAM (name sorted) completed. Now starting SAM-file splitting")
         # sam_split(intermediary, outfile_perfect, outfile_secondary)
-        sam_parse.sam_split_runner(intermediary_sam, directory + "/", 2500000, threads)
+        sam_parse.sam_split_runner(intermediary_sam, directory + "/", 2000000, threads)
         subprocess.call(["rm", str(intermediary_sam)])
         logging.info("Splitting of the SAM-file completed")
     elif ".sam" in infile:
@@ -175,7 +175,7 @@ if __name__ == "__main__":
             # subprocess.call("", shell=True)
             # used to be check_call
             subprocess.call(
-                "{0} view {1} -@ {2} -ht {3} | samtools sort - -@ {2} -m 2G -n -T {4} | samtools view - -o {5} -@ {2} "
+                "{0} view {1} -@ {2} -ht {3} -1 | samtools sort - -@ {2} -m 2G -n -T {4} | samtools view - -o {5} -@ {2} "
                 "-h".format(samtools_path, infile, threads, fasta_index, directory, temp), shell=True)
             errchk()
         except subprocess.CalledProcessError:
@@ -185,7 +185,7 @@ if __name__ == "__main__":
         logging.info("Initial name sorting completed, starting SAM-file splitting at: {}".format(str(datetime.datetime.now())))
         errchk()
         # sam_split(temp, outfile_perfect, outfile_secondary)
-        sam_parse.sam_split_runner(temp, directory + "/", 2500000, threads)
+        sam_parse.sam_split_runner(temp, directory + "/", 2000000, threads)
         errchk()
         logging.info("Splitting of the SAM-file completed at: {}".format(str(datetime.datetime.now())))
         subprocess.call(["rm", temp])
@@ -268,7 +268,7 @@ if __name__ == "__main__":
 
     # Sort reheadered bam file
     # with open(sorted_bam, "wb") as sorted:
-    subprocess.call("/apps/bio/apps/samtools/1.3.1/samtools sort -T %s -@ %s -m %sG %s > %s" % (directory, threads,
+    subprocess.call("/apps/bio/apps/samtools/1.6/samtools sort -T %s -@ %s -m %sG %s > %s" % (directory, threads,
                                                                                                 memory, merged_bam,
                                                                                                 sorted_bam),
                     shell=True)
@@ -279,7 +279,7 @@ if __name__ == "__main__":
     subprocess.call(["rm", merged_bam])
     logging.info("{} removed".format(merged_bam))
 
-    subprocess.call(["/apps/bio/apps/samtools/1.3.1/samtools", "index", sorted_bam])
+    subprocess.call(["/apps/bio/apps/samtools/1.6/samtools", "index", sorted_bam])
     logging.info("Final BAM: {} indexed into: {}".format(sorted_bam, sorted_bam + ".bai"))
     errchk()
     # Remove all intermediary files. Fill in later when testing is done.
