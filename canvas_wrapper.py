@@ -1,7 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 
 import os
 from subprocess import call
+from subprocess import check_call
 from sys import argv
 from math import log
 import socket
@@ -25,7 +26,6 @@ timestring = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M")
 # normal_bam = argv[10]
 #
 # print argv
-
 
 parser = argparse.ArgumentParser()
 
@@ -73,21 +73,24 @@ if normal_bam:
     print(normal_bam)
 sex = str(args.sex)
 print(sex)
-print args
+print(args)
 
-igv_data_folder = "/medstore/IGV_Folders/igv/data/%s" % uname
+if custom_uname:
+    igv_data_folder = "/medstore/IGV_Folders/igv/data/%s" % custom_uname
+else:
+    igv_data_folder = "/medstore/IGV_Folders/igv/data/%s" % uname
 
 
-def igv_modification(user, infile):
+def igv_modification(user, user_xml_path, infile, port):
     """
     Adds entries for seg files to user IGV xml list.
     """
-    with open("/medstore/IGV_Folders/igv/users/%s_igv.xml" % user, "r+") as userfile:
+    with open(user_xml_path, "r+") as userfile:
         lines_of_file = userfile.readlines()
         bam = os.path.basename(infile)
         lines_of_file.insert(-2,
-                             '\t\t<Resource name="%s" path="http://medstore.sahlgrenska.gu.se:8008/data/%s/%s" />\n' % (
-                                 bam, user, bam))
+                             '\t\t<Resource name="%s" path="http://medstore.sahlgrenska.gu.se:%s/data/%s/%s" />\n' % (
+                                 bam, port, user, bam))
         userfile.seek(0)
         userfile.truncate()
         userfile.writelines(lines_of_file)
@@ -108,7 +111,9 @@ error_file.write(str(socket.gethostname()))
 # else:
 #     mode = "Germline-WGS"
 
-shutil.rmtree("/tmp/canvas_dir")
+if os.path.exists("/tmp/canvas_dir"):
+    shutil.rmtree("/tmp/canvas_dir")
+
 call("mkdir /tmp/canvas_dir", shell=True)
 call("mkdir /tmp/canvas_dir/bam", shell=True)
 call("mkdir /tmp/canvas_dir/outdir", shell=True)
@@ -128,20 +133,58 @@ normal_path = "/tmp/canvas_dir/bam/%s" % normal_filename
 error_file.write("Bampath before looking in text: %s" % bam_path)
 error_file.write("\n")
 
+# if str(bam_file).endswith(".txt"):
+#     print("Bam in textfile")
+#     bam_temp = bam_file.split("/")
+#     bam_file = "/" + str("/".join(bam_temp[1:]))
+#     bam_text_file = open(bam_file, "r")
+#     bam_file = bam_text_file.readline().rstrip()
+#     bam_text_file.close()
+#     array = bam_file.split("/")
+#     bam_filename = array[-1]
+#     #    bam_path = "/tmp/canvas/bam/%s" % filename.rstrip()
+#     bam_path = "/tmp/canvas_dir/bam/"
+#     indexed_bam = 1
+#     print("bam_file: " + str(bam_file))
+#     error_file.write("Bamfile after looking in text: %s\n" % bam_file)
+
 if str(bam_file).endswith(".txt"):
     print("Bam in textfile")
     bam_temp = bam_file.split("/")
+    print("bam_temp: ", bam_temp)
     bam_file = "/" + str("/".join(bam_temp[1:]))
+    print("bam_file1: ", bam_file)
     bam_text_file = open(bam_file, "r")
+    print("bam_text_file: ", bam_text_file)
     bam_file = bam_text_file.readline().rstrip()
+    print("bam_file2", bam_file)
     bam_text_file.close()
     array = bam_file.split("/")
+    print("array:", array)
     bam_filename = array[-1]
-    #    bam_path = "/tmp/canvas/bam/%s" % filename.rstrip()
+    print("bam_filename1: ", bam_filename)
+    bam_filename = "/tmp/canvas_dir/bam/%s" % bam_filename.rstrip()
+    print("bam_filename2: ", bam_filename)
     bam_path = "/tmp/canvas_dir/bam/"
-    indexed_bam = 1
+    print("bam_path: ", bam_path)
+    indexed_bam = True
     print("bam_file: " + str(bam_file))
     error_file.write("Bamfile after looking in text: %s\n" % bam_file)
+
+# if str(normal_bam).endswith(".txt"):
+#     print("Normal in textfile")
+#     normal_temp = normal_bam.split("/")
+#     normal_bam = "/" + str("/".join(normal_temp[1:]))
+#     normal_text_file = open(normal_bam, "r")
+#     normal_bam = normal_text_file.readline().rstrip()
+#     normal_text_file.close()
+#     array_n = normal_bam.split("/")
+#     normal_filename = array_n[-1]
+#     #    bam_path = "/tmp/canvas/bam/%s" % filename.rstrip()
+#     bam_path = "/tmp/canvas_dir/bam/"
+#     indexed_normal = 1
+#     print("normal_bam_file: " + str(bam_file))
+#     error_file.write("Normal bamfile after looking in text: %s\n" % normal_bam)
 
 if str(normal_bam).endswith(".txt"):
     print("Normal in textfile")
@@ -154,16 +197,20 @@ if str(normal_bam).endswith(".txt"):
     normal_filename = array_n[-1]
     #    bam_path = "/tmp/canvas/bam/%s" % filename.rstrip()
     bam_path = "/tmp/canvas_dir/bam/"
-    indexed_normal = 1
+    indexed_normal = True
     print("normal_bam_file: " + str(bam_file))
     error_file.write("Normal bamfile after looking in text: %s\n" % normal_bam)
 
 error_file.write("Bampath after looking in text: %s" % bam_path)
 
 # Copy the bams either from CLC tmp or from IGV folder
-call(["cp", str(bam_file), "-t", "/tmp/canvas_dir/bam"])
-if normal_bam:
-    call(["cp", str(normal_bam), "-t", "/tmp/canvas_dir/bam"])
+# call(["cp", str(bam_file), "-t", "/tmp/canvas_dir/bam"])
+# if normal_bam:
+#     call(["cp", str(normal_bam), "-t", "/tmp/canvas_dir/bam"])
+
+check_call(["cp", str(bam_file), "-t", "/tmp/canvas_dir/bam"])
+if not normal_bam == "None":
+    check_call(["cp", str(normal_bam), "-t", "/tmp/canvas_dir/bam"])
 
 # call(["cp", str(manifest), "-t", str(manifest_path)])
 
@@ -195,7 +242,7 @@ if "Somatic-WGS" in mode:
     mode = "Somatic-WGS"
     print("Somatic-WGS selected")
     call(["/usr/bin/mono", "/apps/CLC_ExternalApps/canvas/1.11.0/Canvas.exe", str(mode), "-b",
-          "/tmp/canvas_dir/bam/" + str(bam_filename),
+          str(bam_filename),
           "--b-allele-vcf=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/dbsnp_common_all_20160601.vcf",
           "--exclude-non-het-b-allele-sites",
           "-o", "/tmp/canvas_dir/outdir", "--reference=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/kmer.fa",
@@ -214,7 +261,7 @@ elif "Enrichment" in mode:
         print("female")
 
     call(["/usr/bin/mono", "/apps/CLC_ExternalApps/canvas/1.11.0/Canvas.exe", str(mode), "-b",
-          "/tmp/canvas_dir/bam/" + str(bam_filename),
+          str(bam_filename),
           "--b-allele-vcf=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/dbsnp_common_all_20160601.vcf",
           "--exclude-non-het-b-allele-sites",
           "-o", "/tmp/canvas_dir/outdir", "--reference=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/kmer.fa",
@@ -228,7 +275,7 @@ elif "enrichment" in mode:
     call(["cp", normal_bam, "-t", "/tmp/canvas_dir/bam"])
     call(["cp", str(manifest), "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/manifest.txt"])
     call(["/usr/bin/mono", "/apps/CLC_ExternalApps/canvas/1.11.0/Canvas.exe", str(mode), "-b",
-          "/tmp/canvas_dir/bam/" + str(bam_filename),
+          str(bam_filename),
           "--normal-bam", str(normal_path),
           "--b-allele-vcf=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/dbsnp_common_all_20160601.vcf",
           "--exclude-non-het-b-allele-sites",
@@ -241,7 +288,7 @@ else:
     mode = "Germline-WGS"
     print("Germline-WGS selected")
     call(["/usr/bin/mono", "/apps/CLC_ExternalApps/canvas/1.11.0/Canvas.exe", str(mode), "-b",
-          "/tmp/canvas_dir/bam/" + str(bam_filename),
+          str(bam_filename),
           "--b-allele-vcf=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/dbsnp_common_all_20160601.vcf",
           "--exclude-non-het-b-allele-sites",
           "-o", "/tmp/canvas_dir/outdir", "--reference=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/kmer.fa",
@@ -293,11 +340,23 @@ call("mv /tmp/canvas_dir/outdir/CNV_called.seg %s" % cnv_copynumber_call, shell=
 call("mv /tmp/canvas_dir/outdir/CNV.CoverageAndVariantFrequency.txt %s" % cnv_text, shell=True)
 
 if os.path.isfile("/medstore/IGV_Folders/igv/users/{}_igv.xml".format(custom_uname)):
-    igv_modification(custom_uname, igv_data_folder + "/CNV_observed_{}.seg".format(timestring))
-    igv_modification(custom_uname, igv_data_folder + "/CNV_called_{}.seg".format(timestring))
+    igv_modification(custom_uname, "/medstore/IGV_Folders/igv/users/%s_igv.xml" % custom_uname,
+                     igv_data_folder + "/CNV_observed_{}.seg".format(timestring), "8008")
+    igv_modification(custom_uname, "/medstore/IGV_Folders/igv/users/%s_igv.xml" % custom_uname,
+                     igv_data_folder + "/CNV_called_{}.seg".format(timestring), "8008")
+    igv_modification(custom_uname, "/medstore/IGV_Folders/igv/users/%s_igv_su.xml" % custom_uname,
+                     igv_data_folder + "/CNV_observed_{}.seg".format(timestring), "80")
+    igv_modification(custom_uname, "/medstore/IGV_Folders/igv/users/%s_igv_su.xml" % custom_uname,
+                     igv_data_folder + "/CNV_called_{}.seg".format(timestring), "80")
 else:
     print("{} is not a valid user. IGV destination")
-    igv_modification(uname, igv_data_folder + "/CNV_observed_{}.seg".format(timestring))
-    igv_modification(uname, igv_data_folder + "/CNV_called_{}.seg".format(timestring))
+    igv_modification(uname, "/medstore/IGV_Folders/igv/users/%s_igv.xml" % uname,
+                     igv_data_folder + "/CNV_observed_{}.seg".format(timestring), "8008")
+    igv_modification(uname, "/medstore/IGV_Folders/igv/users/%s_igv.xml" % uname,
+                     igv_data_folder + "/CNV_called_{}.seg".format(timestring), "8008")
+    igv_modification(uname, "/medstore/IGV_Folders/igv/users/%s_igv_su.xml" % uname,
+                     igv_data_folder + "/CNV_observed_{}.seg".format(timestring), "80")
+    igv_modification(uname, "/medstore/IGV_Folders/igv/users/%s_igv_su.xml" % uname,
+                     igv_data_folder + "/CNV_called_{}.seg".format(timestring), "80")
 
-# call("rm -rf /tmp/canvas_dir", shell=True)
+call("rm -rf /tmp/canvas_dir", shell=True)
