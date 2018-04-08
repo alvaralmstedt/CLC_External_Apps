@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import os
 from subprocess import call
@@ -44,7 +44,8 @@ parser.add_argument("-n", "--custom_uname", nargs="?", action='store', type=str,
                                                                                       ' Overrides default')
 parser.add_argument("-a", "--manifest", nargs="?", action='store', type=str, help='Specify the path to the exome'
                                                                                   ' manifest file')
-parser.add_argument("-r", "--normal_bam", nargs="?", action='store', type=str, help='Full path to bam_normal input file')
+parser.add_argument("-r", "--normal_bam", nargs="?", action='store', type=str,
+                    help='Full path to bam_normal input file')
 parser.add_argument("-s", "--sex", nargs="?", action='store', type=str, help='Specify sex of input sample')
 
 args = parser.parse_args()
@@ -70,7 +71,7 @@ if manifest:
     print(manifest)
 normal_bam = str(args.normal_bam)
 if normal_bam:
-    print(normal_bam)
+    print("normal_bam: ",normal_bam)
 sex = str(args.sex)
 print(sex)
 print(args)
@@ -81,11 +82,16 @@ else:
     igv_data_folder = "/medstore/IGV_Folders/igv/data/%s" % uname
 
 
-def igv_modification(user, user_xml_path, infile, port):
+def make_links(fileloc, linkloc):
+    for file in os.listdir(fileloc):
+        os.symlink(str(os.path.abspath(file)), str(linkloc + "/" + file))
+
+
+def igv_modification(user, infile, port):
     """
     Adds entries for seg files to user IGV xml list.
     """
-    with open(user_xml_path, "r+") as userfile:
+    with open("/medstore/IGV_Folders/igv/users/%s_igv.xml" % user, "r+") as userfile:
         lines_of_file = userfile.readlines()
         bam = os.path.basename(infile)
         lines_of_file.insert(-2,
@@ -94,6 +100,10 @@ def igv_modification(user, user_xml_path, infile, port):
         userfile.seek(0)
         userfile.truncate()
         userfile.writelines(lines_of_file)
+
+
+if os.path.exists("/tmp/canvas_dir"):
+    shutil.rmtree("/tmp/canvas_dir")
 
 error_file = open("/tmp/canvaserror.log", 'w+')
 error_file.write(str(socket.gethostname()))
@@ -111,16 +121,13 @@ error_file.write(str(socket.gethostname()))
 # else:
 #     mode = "Germline-WGS"
 
-if os.path.exists("/tmp/canvas_dir"):
-    shutil.rmtree("/tmp/canvas_dir")
-
 call("mkdir /tmp/canvas_dir", shell=True)
 call("mkdir /tmp/canvas_dir/bam", shell=True)
 call("mkdir /tmp/canvas_dir/outdir", shell=True)
 call("hostname")
 
-indexed_bam = 0
-indexed_normal = 0
+indexed_bam = False
+indexed_normal = False
 
 array = bam_file.split("/")
 bam_filename = array[-1]
@@ -132,21 +139,6 @@ normal_path = "/tmp/canvas_dir/bam/%s" % normal_filename
 
 error_file.write("Bampath before looking in text: %s" % bam_path)
 error_file.write("\n")
-
-# if str(bam_file).endswith(".txt"):
-#     print("Bam in textfile")
-#     bam_temp = bam_file.split("/")
-#     bam_file = "/" + str("/".join(bam_temp[1:]))
-#     bam_text_file = open(bam_file, "r")
-#     bam_file = bam_text_file.readline().rstrip()
-#     bam_text_file.close()
-#     array = bam_file.split("/")
-#     bam_filename = array[-1]
-#     #    bam_path = "/tmp/canvas/bam/%s" % filename.rstrip()
-#     bam_path = "/tmp/canvas_dir/bam/"
-#     indexed_bam = 1
-#     print("bam_file: " + str(bam_file))
-#     error_file.write("Bamfile after looking in text: %s\n" % bam_file)
 
 if str(bam_file).endswith(".txt"):
     print("Bam in textfile")
@@ -171,21 +163,6 @@ if str(bam_file).endswith(".txt"):
     print("bam_file: " + str(bam_file))
     error_file.write("Bamfile after looking in text: %s\n" % bam_file)
 
-# if str(normal_bam).endswith(".txt"):
-#     print("Normal in textfile")
-#     normal_temp = normal_bam.split("/")
-#     normal_bam = "/" + str("/".join(normal_temp[1:]))
-#     normal_text_file = open(normal_bam, "r")
-#     normal_bam = normal_text_file.readline().rstrip()
-#     normal_text_file.close()
-#     array_n = normal_bam.split("/")
-#     normal_filename = array_n[-1]
-#     #    bam_path = "/tmp/canvas/bam/%s" % filename.rstrip()
-#     bam_path = "/tmp/canvas_dir/bam/"
-#     indexed_normal = 1
-#     print("normal_bam_file: " + str(bam_file))
-#     error_file.write("Normal bamfile after looking in text: %s\n" % normal_bam)
-
 if str(normal_bam).endswith(".txt"):
     print("Normal in textfile")
     normal_temp = normal_bam.split("/")
@@ -204,10 +181,6 @@ if str(normal_bam).endswith(".txt"):
 error_file.write("Bampath after looking in text: %s" % bam_path)
 
 # Copy the bams either from CLC tmp or from IGV folder
-# call(["cp", str(bam_file), "-t", "/tmp/canvas_dir/bam"])
-# if normal_bam:
-#     call(["cp", str(normal_bam), "-t", "/tmp/canvas_dir/bam"])
-
 check_call(["cp", str(bam_file), "-t", "/tmp/canvas_dir/bam"])
 if not normal_bam == "None":
     check_call(["cp", str(normal_bam), "-t", "/tmp/canvas_dir/bam"])
@@ -217,85 +190,88 @@ if not normal_bam == "None":
 # Will only be run on text bams
 if indexed_bam:
     print("bam.bai being copied from %s to %s" % (bam_file, bam_path))
-    call(["cp", str(bam_file) + ".bai", "-t", str(bam_path)])
+    check_call(["cp", str(bam_file) + ".bai", "-t", str(bam_path)])
 if indexed_normal and normal_bam:
     print("normal.bai being copied from %s to %s" % (bam_file, bam_path))
-    call(["cp", str(normal_bam) + ".bai", "-t", str(bam_path)])
+    check_call(["cp", str(normal_bam) + ".bai", "-t", str(bam_path)])
 
-
-call("cp -r /medstore/External_References/Canvas_CLC_HG19_Dataset /tmp/canvas_dir/", shell=True)
-call(
+check_call("cp -r /medstore/External_References/Canvas_CLC_HG19_Dataset /tmp/canvas_dir/", shell=True)
+check_call(
     "cp /medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta /tmp/canvas_dir/Canvas_CLC_HG19_Dataset",
     shell=True)
-call("cp /medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta.fai /tmp/canvas_dir/Canvas_CLC_HG19_Dataset", shell=True)
+check_call(
+    "cp /medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta.fai /tmp/canvas_dir/Canvas_CLC_HG19_Dataset",
+    shell=True)
+
+make_links("/tmp/canvas_dir/Canvas_CLC_HG19_Dataset", "/reference/Homo_sapiens/NCBI/hg19/Sequence/WholeGenomeFasta")
 
 # Will only be run on non-text bam files.
 if not indexed_bam:
     # call("module load samtools/1.3.1", shell=True)
-    call("/medstore/IGV_Folders/samtools index /tmp/canvas_dir/bam/%s" % bam_filename, shell=True)
+    print("indexing file main bamfile: ", str(bam_filename))
+    check_call("/medstore/IGV_Folders/samtools index %s" % bam_filename, shell=True)
 
-if not indexed_normal:
+if not indexed_normal and args.normal_bam:
     # call("module load samtools/1.3.1", shell=True)
+    print("indexing normal bamfile: ", normal_filename)
     call("/medstore/IGV_Folders/samtools index /tmp/canvas_dir/bam/%s" % normal_filename, shell=True)
 
 if "Somatic-WGS" in mode:
     mode = "Somatic-WGS"
     print("Somatic-WGS selected")
-    call(["/usr/bin/mono", "/apps/CLC_ExternalApps/canvas/1.11.0/Canvas.exe", str(mode), "-b",
-          str(bam_filename),
-          "--b-allele-vcf=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/dbsnp_common_all_20160601.vcf",
-          "--exclude-non-het-b-allele-sites",
-          "-o", "/tmp/canvas_dir/outdir", "--reference=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/kmer.fa",
-          "-g", "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/", "-f", "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/filter13.bed",
-          "-n", "WGS", "--custom-parameters=CanvasBin,-p"])
+    check_call(["/apps/CLC_ExternalApps/canvas/1.32.9.918/Canvas-1.32.0.918+master_x64/Canvas", str(mode), "-b",
+                str(bam_filename),
+                "--b-allele-vcf=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/dbsnp_common_all_20160601.vcf",
+                "--exclude-non-het-b-allele-sites",
+                "-o", "/tmp/canvas_dir/outdir", "--reference=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/kmer.fa",
+                "-g", "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/", "-f",
+                "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/filter13.bed",
+                "-n", "WGS", "--custom-parameters=CanvasBin,-p"])
 elif "Enrichment" in mode:
     mode = "Somatic-Enrichment"
     print("Somatic-Enrichment selected")
-    call(["cp", str(manifest), "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/manifest.txt"])
-    
+    check_call(["cp", str(manifest), "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/manifest.txt"])
     if sex == "male":
         print("male")
         pattern = "/medstore/CLC_Import_Export/Alvar_Almstedt/canvas_related/control_samples/binned/male/*/*"
         paths = glob.glob(pattern)
     else:
         print("female")
-
-    call(["/usr/bin/mono", "/apps/CLC_ExternalApps/canvas/1.11.0/Canvas.exe", str(mode), "-b",
-          str(bam_filename),
-          "--b-allele-vcf=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/dbsnp_common_all_20160601.vcf",
-          "--exclude-non-het-b-allele-sites",
-          "-o", "/tmp/canvas_dir/outdir", "--reference=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/kmer.fa",
-          "--manifest", "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/manifest.txt",
-          "-g", "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/", "-f",
-          "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/filter13.bed",
-          "-n", "WGS", "--custom-parameters=CanvasBin,-p"])
+    check_call(["/apps/CLC_ExternalApps/canvas/1.32.9.918/Canvas-1.32.0.918+master_x64/Canvas", str(mode), "-b",
+                str(bam_filename),
+                "--b-allele-vcf=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/dbsnp_common_all_20160601.vcf",
+                "--exclude-non-het-b-allele-sites",
+                "-o", "/tmp/canvas_dir/outdir", "--reference=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/kmer.fa",
+                "--manifest", "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/manifest.txt",
+                "-g", "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/", "-f",
+                "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/filter13.bed",
+                "-n", "WGS", "--custom-parameters=CanvasBin,-p"])
 elif "enrichment" in mode:
     mode = "Tumor-normal-enrichment"
     print("Tumor-normal-enrichment selected")
-    call(["cp", normal_bam, "-t", "/tmp/canvas_dir/bam"])
-    call(["cp", str(manifest), "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/manifest.txt"])
-    call(["/usr/bin/mono", "/apps/CLC_ExternalApps/canvas/1.11.0/Canvas.exe", str(mode), "-b",
-          str(bam_filename),
-          "--normal-bam", str(normal_path),
-          "--b-allele-vcf=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/dbsnp_common_all_20160601.vcf",
-          "--exclude-non-het-b-allele-sites",
-          "-o", "/tmp/canvas_dir/outdir", "--reference=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/kmer.fa",
-          "--manifest", "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/manifest.txt",
-          "-g", "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/", "-f",
-          "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/filter13.bed",
-          "-n", "WGS", "--custom-parameters=CanvasBin,-p"])
+    check_call(["cp", normal_bam, "-t", "/tmp/canvas_dir/bam"])
+    check_call(["cp", str(manifest), "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/manifest.txt"])
+    check_call(["/apps/CLC_ExternalApps/canvas/1.32.9.918/Canvas-1.32.0.918+master_x64/Canvas", str(mode), "-b",
+                str(bam_filename),
+                "--normal-bam", str(normal_path),
+                "--b-allele-vcf=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/dbsnp_common_all_20160601.vcf",
+                "--exclude-non-het-b-allele-sites",
+                "-o", "/tmp/canvas_dir/outdir", "--reference=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/kmer.fa",
+                "--manifest", "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/manifest.txt",
+                "-g", "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/", "-f",
+                "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/filter13.bed",
+                "-n", "WGS", "--custom-parameters=CanvasBin,-p"])
 else:
     mode = "Germline-WGS"
     print("Germline-WGS selected")
-    call(["/usr/bin/mono", "/apps/CLC_ExternalApps/canvas/1.11.0/Canvas.exe", str(mode), "-b",
-          str(bam_filename),
-          "--b-allele-vcf=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/dbsnp_common_all_20160601.vcf",
-          "--exclude-non-het-b-allele-sites",
-          "-o", "/tmp/canvas_dir/outdir", "--reference=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/kmer.fa",
-          "-g", "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/", "-f",
-          "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/filter13.bed",
-          "-n", "WGS", "--custom-parameters=CanvasBin,-p"])
-
+    check_call(["/apps/CLC_ExternalApps/canvas/Canvas-1.34.0.1201+master_x64/Canvas", str(mode), "-b",
+                str(bam_filename),
+                "--population-b-allele-vcf=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/dbsnp_common_all_20160601.vcf",
+                "--exclude-non-het-b-allele-sites",
+                "-o", "/tmp/canvas_dir/outdir", "--reference=/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/kmer.fa",
+                "-g", "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/", "-f",
+                "/tmp/canvas_dir/Canvas_CLC_HG19_Dataset/filter13.bed",
+                "-n", "WGS", "--custom-parameters=CanvasBin,-p"])
 
 with open("/tmp/canvas_dir/outdir/CNV.CoverageAndVariantFrequency.txt", "r") as INFILE:
     with open("/tmp/canvas_dir/outdir/CNV_observed.seg", "w+") as OUTFILE:
@@ -340,23 +316,15 @@ call("mv /tmp/canvas_dir/outdir/CNV_called.seg %s" % cnv_copynumber_call, shell=
 call("mv /tmp/canvas_dir/outdir/CNV.CoverageAndVariantFrequency.txt %s" % cnv_text, shell=True)
 
 if os.path.isfile("/medstore/IGV_Folders/igv/users/{}_igv.xml".format(custom_uname)):
-    igv_modification(custom_uname, "/medstore/IGV_Folders/igv/users/%s_igv.xml" % custom_uname,
-                     igv_data_folder + "/CNV_observed_{}.seg".format(timestring), "8008")
-    igv_modification(custom_uname, "/medstore/IGV_Folders/igv/users/%s_igv.xml" % custom_uname,
-                     igv_data_folder + "/CNV_called_{}.seg".format(timestring), "8008")
-    igv_modification(custom_uname, "/medstore/IGV_Folders/igv/users/%s_igv_su.xml" % custom_uname,
-                     igv_data_folder + "/CNV_observed_{}.seg".format(timestring), "80")
-    igv_modification(custom_uname, "/medstore/IGV_Folders/igv/users/%s_igv_su.xml" % custom_uname,
-                     igv_data_folder + "/CNV_called_{}.seg".format(timestring), "80")
+    igv_modification(custom_uname, igv_data_folder + "/CNV_observed_{}.seg".format(timestring), "8008")
+    igv_modification(custom_uname, igv_data_folder + "/CNV_called_{}.seg".format(timestring), "8008")
+    igv_modification(custom_uname, igv_data_folder + "/CNV_observed_{}.seg".format(timestring), "80")
+    igv_modification(custom_uname, igv_data_folder + "/CNV_called_{}.seg".format(timestring), "80")
 else:
     print("{} is not a valid user. IGV destination")
-    igv_modification(uname, "/medstore/IGV_Folders/igv/users/%s_igv.xml" % uname,
-                     igv_data_folder + "/CNV_observed_{}.seg".format(timestring), "8008")
-    igv_modification(uname, "/medstore/IGV_Folders/igv/users/%s_igv.xml" % uname,
-                     igv_data_folder + "/CNV_called_{}.seg".format(timestring), "8008")
-    igv_modification(uname, "/medstore/IGV_Folders/igv/users/%s_igv_su.xml" % uname,
-                     igv_data_folder + "/CNV_observed_{}.seg".format(timestring), "80")
-    igv_modification(uname, "/medstore/IGV_Folders/igv/users/%s_igv_su.xml" % uname,
-                     igv_data_folder + "/CNV_called_{}.seg".format(timestring), "80")
+    igv_modification(uname, igv_data_folder + "/CNV_observed_{}.seg".format(timestring), "8008")
+    igv_modification(uname, igv_data_folder + "/CNV_called_{}.seg".format(timestring), "8008")
+    igv_modification(uname, igv_data_folder + "/CNV_observed_{}.seg".format(timestring), "80")
+    igv_modification(uname, igv_data_folder + "/CNV_called_{}.seg".format(timestring), "80")
 
-call("rm -rf /tmp/canvas_dir", shell=True)
+# call("rm -rf /tmp/canvas_dir", shell=True)

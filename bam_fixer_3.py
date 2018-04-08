@@ -9,6 +9,7 @@ import datetime
 """
 This script will take bam or sam files from CLC and try to convert them to a format that is more compatible with
 third part software that wants more bwa-like bam/sam files (such as manta for example). Work In Progress.
+Aimed to be used for SV-Bay
 """
 
 

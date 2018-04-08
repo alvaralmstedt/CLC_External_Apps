@@ -5,10 +5,12 @@ import subprocess
 from os import path
 import logging
 import datetime
+import sam_parse
 
 """
 This script will take bam or sam files from CLC and try to convert them to a format that is more compatible with
-third part software that wants more bwa-like bam/sam files (such as manta for example). Work In Progress.
+third party software that wants more bwa-like bam/sam files (such as manta for example). Work In Progress.
+Aimed to be used with manta
 """
 
 
@@ -33,7 +35,7 @@ def determine_node():
     else:
         return node
 
-
+# sam_split is no longer used. Replaced with separate sam_parse script
 # Function splits input into perfectly mapped reads with NH:1 and QMAP > 3 and secondary mapped
 # with NH:>1 and QMAP < 3
 
@@ -117,9 +119,13 @@ if __name__ == "__main__":
     fasta_index = "/medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta.fai"
     bwa_index = fasta_index.rsplit('.', 1)[0]
     directory = path.dirname(outfile_secondary)
+    logging.info("Inputs: Infile = {}, Outfile_prefect = {}, Outfile_secondary = {}, loggloc = {}".format(str(infile),
+                                                                                                          str(outfile_perfect),
+                                                                                                          str(outfile_secondary),
+                                                                                                          str(loggloc)))
 
-    # samtools_module = "module load samtools/1.3.1"
-    samtools_path = "/apps/bio/apps/samtools/1.3.1/samtools"
+    # samtools_module = "module load samtools/1.6"
+    samtools_path = "/apps/bio/apps/samtools/1.6/samtools"
     # bwa_module = "module load bwa/0.7.5a"
     bwa_path = "/apps/bio/local/apps/bwa/0.7.5a/bwa"
     logging.info("initial variables set")
@@ -128,26 +134,39 @@ if __name__ == "__main__":
     if ".bam" in infile:
         logging.info("Input file was: BAM")
         errchk()
-        intermediary = infile.replace(".bam", ".sam")
+        intermediary_sam = infile.replace(".bam", ".sam")
+        intermediary_sorted = infile.replace(".bam", ".sorted.bam")
         print(str(infile))
-        print(str(intermediary))
+        print(str(intermediary_sam))
         try:
             # used to be check_call
-            subprocess.call(
-                "{0} sort {1} -n -@ {2} -m {3}G -T {4} | samtools view - -o {5} -@ {2} -h".format(samtools_path, infile,
-                                                                                                  threads, memory,
-                                                                                                  directory,
-                                                                                                  intermediary),
-                shell=True)
+
+            subprocess.call("{0} sort {1} -n -@ {2} -m {3}G -T {4} -o {6} && {0} view {6} -o {5} -@ {2} -h".format(samtools_path,
+                                                                                                                   infile,
+                                                                                                                   threads,
+                                                                                                                   memory, directory,
+                                                                                                                   intermediary_sam,
+                                                                                                                   intermediary_sorted),
+                            shell=True)
+            # remove intermidary bam file which is no longer needed
+            subprocess.call(["rm", str(intermediary_sorted)])
+            # Old way to fix the input bam. The above way is 2,7% faster than the one below.
+            # subprocess.call(
+            #     "{0} sort {1} -n -@ {2} -m {3}G -T {4} | {0} view - -o {5} -@ {2} -h".format(samtools_path, infile,
+            #                                                                                  threads, memory,
+            #                                                                                  directory,
+            #                                                                                  intermediary_sam),
+            #    shell=True)
             errchk()
         except subprocess.CalledProcessError:
             logging.warning("CALLEDPROCESSERROR in initial sort")
         except OSError:
-            print("OSERROR")
-            logging.warning("OSERROR in initial sort")
+            print("OSERROR (bam)")
+            logging.warning("OSERROR in initial sort (bam)")
         logging.info("Initial conversion of BAM to SAM (name sorted) completed. Now starting SAM-file splitting")
-        sam_split(intermediary, outfile_perfect, outfile_secondary)
-        subprocess.call(["rm", str(intermediary)])
+        # sam_split(intermediary, outfile_perfect, outfile_secondary)
+        sam_parse.sam_split_runner(intermediary_sam, directory + "/", 2000000, threads)
+        subprocess.call(["rm", str(intermediary_sam)])
         logging.info("Splitting of the SAM-file completed")
     elif ".sam" in infile:
         logging.info("input file was: SAM")
@@ -156,16 +175,17 @@ if __name__ == "__main__":
             # subprocess.call("", shell=True)
             # used to be check_call
             subprocess.call(
-                "{0} view {1} -@ {2} -ht {3} | samtools sort - -@ {2} -m 2G -n -T {4} | samtools view - -o {5} -@ {2} "
+                "{0} view {1} -@ {2} -ht {3} -1 | samtools sort - -@ {2} -m 2G -n -T {4} | samtools view - -o {5} -@ {2} "
                 "-h".format(samtools_path, infile, threads, fasta_index, directory, temp), shell=True)
             errchk()
         except subprocess.CalledProcessError:
-            logging.warning("CALLEDPROCESERROR in initial sort")
+            logging.warning("CALLEDPROCESERROR in initial sort (sam)")
         except OSError:
-            logging.warning("OSERROR in initial sort")
+            logging.warning("OSERROR in initial sort (sam)")
         logging.info("Initial name sorting completed, starting SAM-file splitting at: {}".format(str(datetime.datetime.now())))
         errchk()
-        sam_split(temp, outfile_perfect, outfile_secondary)
+        # sam_split(temp, outfile_perfect, outfile_secondary)
+        sam_parse.sam_split_runner(temp, directory + "/", 2000000, threads)
         errchk()
         logging.info("Splitting of the SAM-file completed at: {}".format(str(datetime.datetime.now())))
         subprocess.call(["rm", temp])
@@ -181,6 +201,10 @@ if __name__ == "__main__":
     errchk()
 
     secondary_tmp = outfile_secondary + "_temp"
+
+    # Remove original infile in order to save space
+    subprocess.call(["rm", str(infile)])
+    logging.info("{} removed".format(infile))
 
     # Reheader the secondary mapped sam file
     subprocess.call("{} view -ht {} {} > {}".format(samtools_path, fasta_index, outfile_secondary, secondary_tmp),
@@ -218,7 +242,6 @@ if __name__ == "__main__":
     errchk()
 
     # Remove now unnecessary perfect.sam and secondary.sam
-
     subprocess.call(["rm", str(outfile_perfect)])
     subprocess.call(["rm", str(outfile_secondary)])
     logging.info("{} and {} removed".format(outfile_perfect, outfile_secondary))
@@ -245,13 +268,18 @@ if __name__ == "__main__":
 
     # Sort reheadered bam file
     # with open(sorted_bam, "wb") as sorted:
-    subprocess.call("/apps/bio/apps/samtools/1.3.1/samtools sort -T %s -@ %s -m %sG %s > %s" % (directory, threads,
+    subprocess.call("/apps/bio/apps/samtools/1.6/samtools sort -T %s -@ %s -m %sG %s > %s" % (directory, threads,
                                                                                                 memory, merged_bam,
                                                                                                 sorted_bam),
                     shell=True)
     logging.info("Final BAM: {} sorted to: {}".format(merged_bam, sorted_bam))
     errchk()
-    subprocess.call(["/apps/bio/apps/samtools/1.3.1/samtools", "index", sorted_bam])
+
+    # Removing merged.bam to save space
+    subprocess.call(["rm", merged_bam])
+    logging.info("{} removed".format(merged_bam))
+
+    subprocess.call(["/apps/bio/apps/samtools/1.6/samtools", "index", sorted_bam])
     logging.info("Final BAM: {} indexed into: {}".format(sorted_bam, sorted_bam + ".bai"))
     errchk()
     # Remove all intermediary files. Fill in later when testing is done.
